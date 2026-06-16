@@ -1,11 +1,10 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <p>coba dulu</p>
-      </main>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">Toko Kerajinan Sedang Dibangun</h1>
+        <p className="text-gray-600">Katalog produk akan segera hadir. Nantikan ya!</p>
+      </div>
     </div>
   );
 }
