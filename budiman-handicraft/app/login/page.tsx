@@ -27,11 +27,11 @@ export default function LoginPage() {
 
       if (authError) throw authError;
 
-      const { data: profil } = await supabase
+      const { data: profil, error: profilError } = await supabase
         .from('profil_pelanggan')
         .select('role')
         .eq('id', authData.user.id)
-        .single();
+        .maybeSingle();
 
       if (profil?.role === 'admin') {
         router.push('/admin');
