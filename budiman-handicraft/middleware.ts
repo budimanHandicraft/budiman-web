@@ -1,39 +1,47 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
-export function middleware(request: NextRequest) {
-    const pathname = request.nextUrl.pathname;
-    const isAdminRoute = pathname.startsWith('/admin');
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
 
-    if (isAdminRoute) {
-        const secretKey = request.nextUrl.searchParams.get('secret');
-        const hasAdminCookie = request.cookies.get('admin_granted');
-        if (secretKey === 'token_admin') {
-            const response = NextResponse.next();
-            
-            response.cookies.set('admin_granted', 'true', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 60 * 24 * 7,
-                path: '/',
-            });
-            return response;
-        }
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+        },
+      },
+    }
+  );
 
-        if (hasAdminCookie?.value === 'true') {
-            return NextResponse.next();
-        }
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const { data: { user } } = await supabase.auth.getUser();
 
-        const loginUrl = request.nextUrl.clone();
-        loginUrl.pathname = '/';
-        loginUrl.search = '';
-        
-        return NextResponse.redirect(loginUrl);
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    return NextResponse.next();
+    const { data: profil } = await supabase
+      .from('profil_pelanggan')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profil?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  return supabaseResponse;
 }
 
 export const config = {
-    matcher: '/admin/:path*',
+  matcher: ['/admin/:path*'],
 };
