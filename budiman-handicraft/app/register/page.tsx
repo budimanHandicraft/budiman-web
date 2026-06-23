@@ -70,28 +70,28 @@ export default function RegisterPage() {
         )}
 
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Nama Lengkap</label>
+          <div className="text-black">
+            <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
             <input type="text" required placeholder="Sesuai KTP/Penerima" value={namaLengkap} onChange={(e) => setNamaLengkap(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500"/>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Nomor WhatsApp / HP</label>
+          <div className="text-black">
+            <label className="block text-sm font-medium mb-1">Nomor WhatsApp / HP</label>
             <input type="tel" required placeholder="0812xxxxxx" value={nomorHp} onChange={(e) => setNomorHp(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500"/>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+          <div className="text-black">
+            <label className="block text-sm font-medium mb-1">Email</label>
             <input type="email" required placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500"/>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Password</label>
+            <div className="text-black">
+              <label className="block text-sm font-medium mb-1">Password</label>
               <input type="password" required placeholder="Minimal 6 karakter" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500"/>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Ulangi Password</label>
+            <div className="text-black">
+              <label className="block text-sm font-medium mb-1">Ulangi Password</label>
               <input type="password" required placeholder="Ulangi password" value={konfirmasiPassword} onChange={(e) => setKonfirmasiPassword(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500"/>
             </div>
           </div>
