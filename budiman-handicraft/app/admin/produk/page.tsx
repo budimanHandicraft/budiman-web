@@ -13,6 +13,7 @@ interface Produk {
   stok: number;
   gambar_url: string;
   is_active: boolean;
+  kategori: string;
 }
 
 export default function AdminProduk() {
@@ -20,6 +21,7 @@ export default function AdminProduk() {
   const [produkList, setProdukList] = useState<Produk[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nama, setNama] = useState('');
+  const [kategori, setKategori] = useState('Umum');
   const [deskripsi, setDeskripsi] = useState('');
   const [harga, setHarga] = useState('');
   const [berat, setBerat] = useState('1000');
@@ -75,6 +77,7 @@ export default function AdminProduk() {
         .from('produk')
         .insert([{
           nama_produk: nama,
+          kategori: kategori || 'Umum',
           deskripsi: deskripsi,
           harga: parseInt(harga),
           berat_gram: parseInt(berat),
@@ -83,10 +86,9 @@ export default function AdminProduk() {
         }]);
 
       if (dbError) throw dbError;
-
       alert('Produk berhasil ditambahkan dan gambar sukses dikompresi!');
       
-      setNama(''); setDeskripsi(''); setHarga(''); setBerat('1000'); setStok(''); setFileGambar(null);
+      setNama(''); setKategori('Umum'); setDeskripsi(''); setHarga(''); setBerat('1000'); setStok(''); setFileGambar(null);
       fetchProduk();
       setActiveTab('daftar');
 
@@ -132,6 +134,7 @@ export default function AdminProduk() {
               <tr className="bg-gray-100 border-b">
                 <th className="p-3">Foto</th>
                 <th className="p-3">Nama Produk</th>
+                <th className="p-3">Kategori</th>
                 <th className="p-3">Harga</th>
                 <th className="p-3">Stok</th>
                 <th className="p-3">Aksi</th>
@@ -139,7 +142,7 @@ export default function AdminProduk() {
             </thead>
             <tbody>
               {produkList.length === 0 ? (
-                <tr><td colSpan={5} className="text-center p-4 text-gray-500">Belum ada produk.</td></tr>
+                <tr><td colSpan={6} className="text-center p-4 text-gray-500">Belum ada produk.</td></tr>
               ) : (
                 produkList.map((produk) => (
                   <tr key={produk.id} className="border-b hover:bg-gray-50">
@@ -147,15 +150,13 @@ export default function AdminProduk() {
                       <img src={produk.gambar_url} alt={produk.nama_produk} className="w-16 h-16 object-cover rounded-md border" />
                     </td>
                     <td className="p-3 font-medium">{produk.nama_produk}</td>
+                    <td className="p-3">
+                      <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{produk.kategori || 'Umum'}</span>
+                    </td>
                     <td className="p-3">Rp {produk.harga.toLocaleString('id-ID')}</td>
                     <td className="p-3">{produk.stok}</td>
                     <td className="p-3">
-                      <button 
-                        onClick={() => handleDelete(produk.id, produk.gambar_url)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
-                      >
-                        Hapus
-                      </button>
+                      <button onClick={() => handleDelete(produk.id, produk.gambar_url)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Hapus</button>
                     </td>
                   </tr>
                 ))
@@ -168,14 +169,22 @@ export default function AdminProduk() {
       {activeTab === 'tambah' && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border max-w-2xl">
           <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Nama Kerajinan</label>
-              <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nama Kerajinan</label>
+                <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Kategori</label>
+                <input type="text" required placeholder="Misal: Souvenir, Wayang, Pakaian" value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Deskripsi</label>
               <textarea rows={3} value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Harga (Rp)</label>
@@ -186,18 +195,15 @@ export default function AdminProduk() {
                 <input type="number" required value={stok} onChange={(e) => setStok(e.target.value)} className="w-full border p-2 rounded outline-none" />
               </div>
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Berat Barang (Gram) <span className="text-gray-400 font-normal">- Default 1000g (1kg)</span></label>
               <input type="number" required value={berat} onChange={(e) => setBerat(e.target.value)} className="w-full border p-2 rounded outline-none" />
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Upload Foto Produk</label>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={(e) => setFileGambar(e.target.files?.[0] || null)} 
-                className="w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
-              />
+              <input type="file" accept="image/*" onChange={(e) => setFileGambar(e.target.files?.[0] || null)} className="w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
               <p className="text-xs text-gray-500 mt-1">Sistem otomatis memperkecil ukuran foto (WebP - Max 100KB) agar website tetap cepat.</p>
             </div>
 
