@@ -58,7 +58,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-right">
-          <Link href="/lupa-password" className="text-sm text-blue-600 hover:underline font-medium">Lupa Password?</Link>
+          <Link href="/login/lupa-password" className="text-sm text-blue-600 hover:underline font-medium">Lupa Password?</Link>
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
