@@ -57,6 +57,10 @@ export default function LoginPage() {
           <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white font-bold py-2 rounded">{isLoading ? 'Memproses...' : 'Masuk'}</button>
         </div>
 
+        <div className="text-right">
+          <Link href="/lupa-password" className="text-sm text-blue-600 hover:underline font-medium">Lupa Password?</Link>
+        </div>
+
         <div className="mt-6 text-center text-sm text-gray-600">
           Belum punya akun?{' '}
           <Link href="/register" className="text-blue-600 font-bold hover:underline">Daftar sekarang</Link>
