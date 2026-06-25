@@ -22,7 +22,6 @@ export default function LupaPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Arahkan ke halaman ganti password setelah mereka klik link di email
         redirectTo: `${window.location.origin}/ganti-password`,
       });
 
