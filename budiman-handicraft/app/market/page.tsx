@@ -16,6 +16,7 @@ export default function MarketPage() {
   const [keranjang, setKeranjang] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckout, setIsCheckout] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [namaPenerima, setNamaPenerima] = useState('');
   const [nomorHp, setNomorHp] = useState('');
   const [alamatLengkap, setAlamatLengkap] = useState('');
@@ -39,6 +40,7 @@ export default function MarketPage() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
+      setIsLoggedIn(true);
       const { data: profil } = await supabase
         .from('profil_pelanggan')
         .select('*')
@@ -51,7 +53,7 @@ export default function MarketPage() {
         setAlamatLengkap(profil.alamat_default || '');
       }
     } else {
-      router.push('/login');
+      setIsLoading(false);
     }
     setIsLoading(false);
   };
@@ -68,6 +70,13 @@ export default function MarketPage() {
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if(!isLoggedIn){
+      alert('Silakan masuk (login) terlebih dahulu untuk melanjutkan pembayaran.');
+      router.push('/login');
+      return;
+    }
+
     if (keranjang.length === 0) return alert('Keranjang masih kosong!');
     if (!alamatLengkap) return alert('Alamat pengiriman wajib diisi!');
 
