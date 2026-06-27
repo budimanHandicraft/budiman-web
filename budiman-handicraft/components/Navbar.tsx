@@ -58,7 +58,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white sticky top-0 z-50 opacity-95">
+    <nav className={`fixed top-0 left-0 w-full z-50 ${pathname === '/' ? 'bg-white/80' : 'bg-white'}`}>
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex justify-between items-center h-32">
           {/* <div className="flex items-center gap-32"> */}
