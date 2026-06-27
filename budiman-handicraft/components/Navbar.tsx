@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import Image from 'next/image';
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -57,27 +58,32 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="font-extrabold text-xl text-blue-600 tracking-tight">
-              Budiman
-              <span className="text-gray-900">Handicraft</span>
+    <nav className="bg-white sticky top-0 z-50 opacity-95">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="flex justify-between items-center h-32">
+          {/* <div className="flex items-center gap-32"> */}
+            <Link href="/" className="flex justify-center items-center">
+              <Image
+                src="/logo.svg" alt="logo budiman"
+                width={360} height={100}
+                className="object-contain"
+              />
             </Link>
+          {/* </div> */}
 
-            <div className="hidden md:flex space-x-6">
-              <Link href="/" className={`text-sm font-medium transition-colors ${pathname === '/' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Beranda</Link>
-              <Link href="/katalog" className={`text-sm font-medium transition-colors ${pathname === '/katalog' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Katalog</Link>
+            <div className="hidden md:flex gap-16">
+              <Link href="/" className={`text-[28px] font-medium transition-colors ${pathname === '/' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>About Us</Link>
+              <Link href="/katalog" className={`text-[28px] font-medium transition-colors ${pathname === '/katalog' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Catalog</Link>
+              <Link href="/#" className={`text-[28px] font-medium transition-colors ${pathname === '/artisans' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Artisans</Link>
+              <Link href="/#" className={`text-[28px] font-medium transition-colors ${pathname === '/history' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>History</Link>
             </div>
-          </div>
 
-          <div className="flex items-center gap-6">
-            <Link href="/market" className={`text-sm font-medium transition-colors flex items-center gap-1 ${pathname === '/market' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+          <div className="flex items-center gap-12">
+            <Link href="/market" className={`text-[28px] font-bold transition-colors flex items-center gap-2 ${pathname === '/market' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
-              <span className="hidden sm:inline">Keranjang</span>
+              <span className="hidden sm:inline">Cart</span>
             </Link>
 
             {isLoggedIn ? (
@@ -100,7 +106,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link href="/login"  className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors">Masuk</Link>
+              <Link href="/login"  className="bg-black text-white px-5 py-2 rounded-lg text-[20px] font-bold hover:bg-gray-800 transition-colors">Login</Link>
             )}
 
           </div>
