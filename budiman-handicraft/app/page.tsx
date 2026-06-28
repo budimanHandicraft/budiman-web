@@ -60,6 +60,40 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="py-16 bg-black relative overflow-hidden">
+        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-32">
+          <div className="mb-8">
+            <h4 className="text-[#d97736] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
+            <h2 className="text-[28px] font-bold text-white mb-4 leading-none">The Artisan Masterpiece</h2>
+            <p className="text-white text-[18px] max-w-3xl">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-32">
+            <div className="group cursor-pointer">
+              <div className="aspect-[4/5] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
+              </div>
+              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
+              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="aspect-[4/5] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
+              </div>
+              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Busur Panah</h3>
+              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="aspect-[4/5] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
+              </div>
+              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
+              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+            </div>
+          </div>
+        </div>
+      </section>
       
     </main>
   );
