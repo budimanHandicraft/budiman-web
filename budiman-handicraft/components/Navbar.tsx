@@ -65,7 +65,7 @@ export default function Navbar() {
             <Link href="/" className="flex justify-center items-center">
               <Image
                 src="/logo.svg" alt="logo budiman"
-                width={360} height={100}
+                width={320} height={100}
                 className="object-contain"
               />
             </Link>
