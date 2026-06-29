@@ -4,18 +4,27 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="min-h-screen bg-white">
-      <section className="relative w-full h-[600px] md:h-[1400px] flex items-center overflow-hidden">
+      <section className="-mt-12 relative w-full h-[600px] md:h-[1000px] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0 overflow-hidden bg-[#081318]">
           <Image
             src="/wayang.png" alt="background wayang"
             fill priority
-            className="object-cover scale-90 object-[center_15%]"
+            className="object-cover scale-90 object-[center_20%]"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent"></div>
         </div>
 
+        <div className="relative z-10 w-full pl-16">
+          <h1 className="text-[48px] text-[#df9e3d] font-bold">Legacy since 1999</h1>
+
+          <p className="my-4 max-w-md text-[28px] text-white font-bold">Melestarikan Budaya Sunda <span className="text-[#df9e3d]">Melalui</span> <span className="italic">Karya Tangan</span></p>
+          <p className="max-w-xl text-white text-[16px]">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</p>
+
+          <button className="mt-8 px-6 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold">Explore Collections</button>
+        </div>
+
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[2px]">
-          <svg className="relative block w-full h-[80px] md:h-[500px] transform -scale-x-100" xmlns="http://www.w3.org/2000/svg"
+          <svg className="relative block w-full h-[80px] md:h-[400px] transform -scale-x-100" xmlns="http://www.w3.org/2000/svg"
                viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path
               d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,224C960,203,1056,149,1152,133.3C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
@@ -25,7 +34,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="pb-16 bg-white">
+      <section className="pb-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
