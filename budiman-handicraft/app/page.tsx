@@ -71,7 +71,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-24">
           <div className="mb-8">
-            <h4 className="text-[#d97736] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
+            <h4 className="text-[#df9e3d] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
             <h2 className="text-[28px] font-bold text-white mb-4 leading-none">The Artisan Masterpiece</h2>
             <p className="text-white text-[18px] max-w-3xl">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
           </div>
@@ -82,21 +82,21 @@ export default function Home() {
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
-              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
             </div>
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Busur Panah</h3>
-              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
             </div>
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
-              <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
+              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function Home() {
             </div>
 
             <div className="w-full lg:w-1/2">
-              <h4 className="text-[#d97736] font-bold text-[28px] tracking-[0.2em] uppercase mb-3">Legacy Since 1999</h4>
+              <h4 className="text-[#df9e3d] font-bold text-[28px] tracking-[0.2em] uppercase mb-3">Legacy Since 1999</h4>
               <h2 className="text-[52px] font-bold text-black mb-8">Our legacy of Craft</h2>
               <div className="space-y-6 text-black text-[24px] leading-tight mb-10 text-justify">
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
@@ -126,19 +126,19 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-16 mb-8 text-center lg:text-left">
                 <div>
                   <div className="text-[52px] text-black mb-1">25<span className="text-2xl">+</span></div>
-                  <div className="text-[20px] font-bold text-[#d97736] uppercase tracking-wider">Years</div>
+                  <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Years</div>
                 </div>
                 <div>
                   <div className="text-[52px] text-black mb-1">1,5 K</div>
-                  <div className="text-[20px] font-bold text-[#d97736] uppercase tracking-wider">Works</div>
+                  <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Works</div>
                 </div>
                 <div>
                   <div className="text-[52px] text-black mb-1">52</div>
-                  <div className="text-[20px] font-bold text-[#d97736] uppercase tracking-wider">Artisans</div>
+                  <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Artisans</div>
                 </div>
               </div>
 
-              <Link href="/katalog" className="inline-flex items-center gap-2 text-[24px] font-bold text-black hover:text-[#d97736] transition-colors uppercase tracking-wider">
+              <Link href="/#" className="inline-flex items-center gap-2 text-[24px] font-bold text-black hover:text-[#d97736] transition-colors uppercase tracking-wider">
                 Meet Our Artisans <span>&rarr;</span>
               </Link>
             </div>
@@ -160,7 +160,7 @@ export default function Home() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
 
-          <button type="submit" className="bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md">Login</button>
+          <button type="submit" className="bg-[#d77723] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md">Login</button>
         </div>
       </section>
       
