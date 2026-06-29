@@ -177,19 +177,21 @@ export default function KatalogPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {produkTampil.map((produk) => (
                     <div key={produk.id} className="flex flex-col group">
-                      <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4 relative overflow-hidden">
-                        {produk.gambar_url ? (
-                          <Image 
+                      <Link href={`/katalog/${produk.id}`} className="group-hover:cursor-pointer block">
+                        <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4 relative overflow-hidden">
+                          {produk.gambar_url ? (
+                            <Image 
                             src={produk.gambar_url} alt={produk.nama_produk} fill 
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No Image</div>
-                        )}
-                      </div>
-                      
-                      <h3 className="text-lg font-serif font-bold text-gray-900 mb-1">{produk.nama_produk}</h3>
-                      <p className="text-sm font-bold text-gray-800 mb-3">Rp {produk.harga.toLocaleString('id-ID')}</p>
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No Image</div>
+                          )}
+                        </div>
+                        
+                        <h3 className="text-lg font-serif font-bold text-gray-900 mb-1">{produk.nama_produk}</h3>
+                        <p className="text-sm font-bold text-gray-800 mb-3">Rp {produk.harga.toLocaleString('id-ID')}</p>
+                      </Link>
                       
                       <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 text-justify mb-4 flex-1">{produk.deskripsi}</p>
                       
