@@ -35,7 +35,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Craftmanship</h3>
-              <p className="text-black text-[16px] leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
             </div>
 
             <div>
@@ -45,7 +45,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Philosophy</h3>
-              <p className="text-black text-[16px] leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
             </div>
 
             <div>
@@ -55,7 +55,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Longevity</h3>
-              <p className="text-black text-[16px] leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
             </div>
           </div>
         </div>
@@ -69,30 +69,30 @@ export default function Home() {
             className="object-cover object-[center_10%]"
           />
         </div>
-        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-32">
+        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-24">
           <div className="mb-8">
             <h4 className="text-[#d97736] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
             <h2 className="text-[28px] font-bold text-white mb-4 leading-none">The Artisan Masterpiece</h2>
             <p className="text-white text-[18px] max-w-3xl">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-24 px-32">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-32 px-24">
             <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
               <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
             </div>
             <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Busur Panah</h3>
               <p className="text-[#d97736] font-bold text-[24px]">Rp. 300.000,00</p>
             </div>
             <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overfloow-hidden rounded-sm relative">
+              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
               </div>
               <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
@@ -103,7 +103,7 @@ export default function Home() {
       </section>
 
       <section className="py-20 bg-white">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-32">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-24">
           <div className="flex flex-col lg:flex-row gap-16 items-center">
             <div className="w-full lg:w-1/2 relative min-h-[450px]">
               <div className="absolute top-8 left-8 w-3/4 h-[350px] bg-gray-900 rounded-sm"></div>
@@ -116,9 +116,9 @@ export default function Home() {
             </div>
 
             <div className="w-full lg:w-1/2">
-              <h4 className="text-[#d97736] font-bold text-[28px] tracking-[0.2em] uppercae mb-3">Legacy Since 1999</h4>
+              <h4 className="text-[#d97736] font-bold text-[28px] tracking-[0.2em] uppercase mb-3">Legacy Since 1999</h4>
               <h2 className="text-[52px] font-bold text-black mb-8">Our legacy of Craft</h2>
-              <div className="space-y-6 text-black text-[24px] leading-tight mb-10">
+              <div className="space-y-6 text-black text-[24px] leading-tight mb-10 text-justify">
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
               </div>
