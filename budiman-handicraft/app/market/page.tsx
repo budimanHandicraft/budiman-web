@@ -63,9 +63,16 @@ export default function MarketPage() {
     try {
       const res = await fetch('/api/ongkir?type=province');
       const data = await res.json();
-      setProvinces(data);
+      
+      if (Array.isArray(data)) {
+        setProvinces(data);
+      } else {
+        console.error("API gagal mengembalikan daftar provinsi:", data);
+        setProvinces([]);
+      }
     } catch (error) {
       console.error("Gagal memuat provinsi", error);
+      setProvinces([]);
     }
   };
 
@@ -81,9 +88,15 @@ export default function MarketPage() {
     try {
       const res = await fetch(`/api/ongkir?type=city&province=${selectedProvince}`);
       const data = await res.json();
-      setCities(data);
+      if (Array.isArray(data)) {
+        setCities(data);
+      } else {
+        console.error("API RajaOngkir tidak mengembalikan daftar kota:", data);
+        setCities([]); 
+      }
     } catch (error) {
       console.error("Gagal memuat kota", error);
+      setCities([]);
     }
   };
     fetchCities();
@@ -166,7 +179,7 @@ export default function MarketPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-2 italic">Province</label>
                 <select value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)} className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none">
                   <option value="">Select Province</option>
-                  {provinces.map(prov => (
+                  {provinces?.map(prov => (
                     <option key={prov.province_id} value={prov.province_id}>{prov.province}</option>
                   ))}
                 </select>
@@ -176,7 +189,7 @@ export default function MarketPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-2 italic">City</label>
                 <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!selectedProvince} className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none disabled:opacity-50">
                   <option value="">Select City</option>
-                  {cities.map(city => (
+                  {cities?.map(city => (
                     <option key={city.city_id} value={city.city_id}>{city.type} {city.city_name}</option>
                   ))}
                 </select>
