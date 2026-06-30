@@ -91,7 +91,7 @@ export default function MarketPage() {
       if (Array.isArray(data)) {
         setCities(data);
       } else {
-        console.error("API RajaOngkir tidak mengembalikan daftar kota:", data);
+        console.error("API gagal mengembalikan daftar kota:", data);
         setCities([]); 
       }
     } catch (error) {
