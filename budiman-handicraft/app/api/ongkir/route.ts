@@ -1,47 +1,31 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
-import https from 'https';
 
 export const dynamic = 'force-dynamic';
 
 const API_KEY = process.env.RAJAONGKIR_API_KEY;
-const BASE_URL = 'https://api.rajaongkir.com/starter';
-const httpsAgent = new https.Agent({ family: 4 });
-
-const axiosConfig = {
-  headers: {
-    'key': API_KEY as string,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept': 'application/json'
-  },
-  timeout: 15000,
-  httpsAgent: httpsAgent
-};
+const BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type');
-  const province = searchParams.get('province');
+  const search = searchParams.get('search');
 
   if (!API_KEY) {
     return NextResponse.json({ error: 'API Key tidak ditemukan' }, { status: 500 });
   }
 
   try {
-    if (type === 'province') {
-      const response = await axios.get(`${BASE_URL}/province`, axiosConfig);
-      return NextResponse.json(response.data.rajaongkir.results);
+    if (search && search.length >= 3) {
+      const response = await axios.get(`${BASE_URL}/destination/domestic-destination?search=${search}`, {
+        headers: { 'key': API_KEY, 'Accept': 'application/json' },
+        timeout: 10000
+      });
+      return NextResponse.json(response.data.data);
     }
-
-    if (type === 'city') {
-      const response = await axios.get(`${BASE_URL}/city?province=${province}`, axiosConfig);
-      return NextResponse.json(response.data.rajaongkir.results);
-    }
-
-    return NextResponse.json({ error: 'Parameter tidak valid' }, { status: 400 });
+    return NextResponse.json([]);
   } catch (error: any) {
-    console.error(">>> ERROR AXIOS GET:", error.message);
-    return NextResponse.json({ error: error.message || 'Koneksi Axios Gagal' }, { status: 500 });
+    console.error(">>> ERROR GET ALAMAT KOMERCE:", error.message);
+    return NextResponse.json({ error: 'Gagal mencari alamat' }, { status: 500 });
   }
 }
 
@@ -53,27 +37,24 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { origin, destination, weight, courier } = body;
+    const formData = new URLSearchParams({
+      origin: String(origin),
+      destination: String(destination),
+      weight: String(weight),
+      courier: String(courier)
+    });
 
-    const response = await axios.post(
-      `${BASE_URL}/cost`,
-      new URLSearchParams({
-        origin: origin.toString(),
-        destination: destination.toString(),
-        weight: weight.toString(),
-        courier: courier
-      }),
-      {
-        ...axiosConfig,
-        headers: {
-          'content-type': 'application/x-www-form-urlencoded',
-          ...axiosConfig.headers
-        }
-      }
-    );
+    const response = await axios.post(`${BASE_URL}/calculate/domestic-cost`, formData.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'key': API_KEY
+      },
+      timeout: 10000
+    });
 
-    return NextResponse.json(response.data.rajaongkir.results[0].costs);
+    return NextResponse.json(response.data);
   } catch (error: any) {
-    console.error(">>> ERROR AXIOS POST:", error.message);
+    console.error(">>> ERROR POST ONGKIR KOMERCE:", error.response?.data || error.message);
     return NextResponse.json({ error: 'Gagal menghitung ongkos kirim' }, { status: 500 });
   }
 }

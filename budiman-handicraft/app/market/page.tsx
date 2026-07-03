@@ -22,11 +22,10 @@ export default function MarketPage() {
   const [fullName, setFullName] = useState('');
   const [address, setAddress] = useState('');
   const [postcode, setPostcode] = useState('');
-  
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [cities, setCities] = useState<any[]>([]);
-  const [selectedProvince, setSelectedProvince] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [destinations, setDestinations] = useState<any[]>([]);
+  const [selectedDestination, setSelectedDestination] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
 
   const supabase = createBrowserClient(
@@ -55,55 +54,31 @@ export default function MarketPage() {
       }
     };
     fetchUserData();
-    fetchProvinces();
     setIsLoading(false);
   }, [supabase]);
 
-  const fetchProvinces = async () => {
-    try {
-      const res = await fetch('/api/ongkir?type=province');
-      const data = await res.json();
-      
-      if (Array.isArray(data)) {
-        setProvinces(data);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length >= 3) {
+        try {
+          const res = await fetch(`/api/ongkir?search=${searchQuery}`);
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setDestinations(data);
+          }
+        } catch (error) {
+          console.error("Gagal mencari alamat:", error);
+        }
       } else {
-        console.error("API gagal mengembalikan daftar provinsi:", data);
-        setProvinces([]);
+        setDestinations([]);
       }
-    } catch (error) {
-      console.error("Gagal memuat provinsi", error);
-      setProvinces([]);
-    }
-  };
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   useEffect(() => {
-    if (!selectedProvince) {
-      setCities([]);
-      setSelectedCity('');
-      setShippingCost(0);
-      return;
-    }
-
-    const fetchCities = async () => {
-    try {
-      const res = await fetch(`/api/ongkir?type=city&province=${selectedProvince}`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setCities(data);
-      } else {
-        console.error("API gagal mengembalikan daftar kota:", data);
-        setCities([]); 
-      }
-    } catch (error) {
-      console.error("Gagal memuat kota", error);
-      setCities([]);
-    }
-  };
-    fetchCities();
-  }, [selectedProvince]);
-
-  useEffect(() => {
-    if (!selectedCity) {
+    if (!selectedDestination) {
       setShippingCost(0);
       return;
     }
@@ -114,23 +89,25 @@ export default function MarketPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            origin: '22', 
-            destination: selectedCity,
-            weight: 1000,
-            courier: 'jne'
+            origin: "4816",
+            destination: selectedDestination,
+            weight: "1000",
+            courier: "jne"
           })
         });
         const data = await res.json();
         
-        if (data && data.length > 0) {
-          setShippingCost(data[0].cost[0].value);
+        if (data?.data && data.data.length > 0) {
+          const actualShippingCost = data.data[0].cost;
+          const estimatedShippingCost = actualShippingCost + 5000
+          setShippingCost(estimatedShippingCost);
         }
       } catch (error) {
         console.error("Gagal memuat ongkir", error);
       }
     };
     fetchCost();
-  }, [selectedCity]);
+  }, [selectedDestination]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
   const grandTotal = subtotal + shippingCost;
@@ -167,37 +144,44 @@ export default function MarketPage() {
           <div className="space-y-6">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2 italic">Recipient Full Name</label>
-              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Udin" className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
+              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Udin" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2 italic">Street Address</label>
-              <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Building name, street, and unit number" className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition resize-none"></textarea>
+              <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Building name, street, and unit number" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition resize-none"></textarea>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Province</label>
-                <select value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)} className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none">
-                  <option value="">Select Province</option>
-                  {provinces?.map(prov => (
-                    <option key={prov.province_id} value={prov.province_id}>{prov.province}</option>
-                  ))}
-                </select>
+                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Cari Kecamatan / Kota (Ketik minimal 3 huruf)</label>
+                <input 
+                  type="text" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  placeholder="Contoh: Bandung, Antapani, atau Lembang..." 
+                  className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" 
+                />
               </div>
               
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2 italic">City</label>
-                <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!selectedProvince} className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none disabled:opacity-50">
-                  <option value="">Select City</option>
-                  {cities?.map(city => (
-                    <option key={city.city_id} value={city.city_id}>{city.type} {city.city_name}</option>
-                  ))}
-                </select>
-              </div>
+              {destinations.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2 italic">Pilih Alamat Spesifik</label>
+                  <select 
+                    value={selectedDestination} 
+                    onChange={(e) => setSelectedDestination(e.target.value)} 
+                    className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none"
+                  >
+                    <option value="">-- Pilih dari hasil pencarian --</option>
+                    {destinations.map(dest => (
+                      <option key={dest.id} value={dest.id}>{dest.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Postcode</label>
-                <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="40123" className="w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
+                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Postcode (Kodepos)</label>
+                <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="40123" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
               </div>
             </div>
           </div>
@@ -269,7 +253,7 @@ export default function MarketPage() {
           </div>
 
           <button 
-            disabled={cartItems.length === 0 || !selectedCity}
+            disabled={cartItems.length === 0 || !selectedDestination}
             className="w-full bg-[#d9dbd0] hover:bg-white text-gray-900 font-bold py-4 px-6 rounded-sm flex items-center justify-center gap-3 uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
