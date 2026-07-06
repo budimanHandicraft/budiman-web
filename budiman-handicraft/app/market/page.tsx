@@ -8,7 +8,7 @@ interface CartItem {
   id: string;
   nama_produk: string;
   harga: number;
-  gambar_url: string;
+  gambar_url: string[];
   kuantitas: number;
   catatan?: string;
 }
@@ -237,7 +237,7 @@ export default function MarketPage() {
                 <div key={idx} className="flex gap-4 items-start">
                   <div className="w-16 h-16 bg-[#e3e8de] rounded-sm relative overflow-hidden shrink-0 mt-1">
                     {item.gambar_url ? (
-                      <Image src={item.gambar_url} alt={item.nama_produk} fill className="object-cover" />
+                      <Image src={item.gambar_url[0]} alt={item.nama_produk} fill className="object-cover" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-400">No Img</div>
                     )}
