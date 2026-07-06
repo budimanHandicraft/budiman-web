@@ -20,14 +20,20 @@ export default function KatalogPage() {
   const [kategoriAktif, setKategoriAktif] = useState('ALL PRODUCT');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 9;
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const daftarKategori = ['ALL PRODUCT', 'WAYANG GOLEK', 'BUSUR PANAH', 'AKSESORIS'];
+  const daftarKategori = [
+    { nama: 'ALL PRODUCT', subKategori: [] },
+    { nama: 'WAYANG GOLEK', subKategori: ['WG ORDINARY QUALITY', 'WG MEDIUM QUALITY', 'WG MINI & TABUNG', 'WG KARAKTER BINATANG']},
+    { nama: 'BUSUR PANAH', subKategori: [] },
+    { nama: 'AKSESORIS', subKategori: [] }
+  ];
+  const [menuTerbuka, setMenuTerbuka] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProduk();
@@ -46,17 +52,46 @@ export default function KatalogPage() {
     setIsLoading(false);
   };
 
-  const handleKategoriChange = (kategori: string) => {
-    setKategoriAktif(kategori);
-    setCurrentPage(1);
-  };
+  const produkTampil = kategoriAktif === 'ALL PRODUCT' ? produkList : produkList.filter(p => {
+        const kategoriInduk = daftarKategori.find(k => k.nama === kategoriAktif);
+        if (kategoriInduk && kategoriInduk.subKategori.length > 0) {
+          return p.kategori.toUpperCase() === kategoriAktif || 
+                 kategoriInduk.subKategori.includes(p.kategori.toUpperCase());
+        }
+        return p.kategori.toUpperCase() === kategoriAktif;
+      });
 
-  const produkTampil = kategoriAktif === 'ALL PRODUCT' ? produkList : produkList.filter(p => p.kategori.toUpperCase() === kategoriAktif);
   const totalPages = Math.ceil(produkTampil.length / itemsPerPage);
   const currentProducts = produkTampil.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  // LOGIKA SLIDING WINDOW DENGAN BOUNDARY PADDING (TETAP 10 HALAMAN)
+  const getVisiblePages = () => {
+    const batasTampil = 10;
+    const lompatan = 4;
+    if (totalPages <= batasTampil) {
+      const pages = [];
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+
+    const kelompokSekarang = Math.floor((currentPage - 1) / lompatan);
+    let startPage = (kelompokSekarang * lompatan) + 1;
+    let endPage = startPage + batasTampil - 1;
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = endPage - batasTampil + 1;
+    }
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const masukkanKeranjang = (produk: Produk) => {
     const keranjangLama = localStorage.getItem('keranjang_umkm');
@@ -86,12 +121,8 @@ export default function KatalogPage() {
         <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-gray-100 pb-8">
           <div className="max-w-3xl">
             <h4 className="text-[#544f2d] font-bold text-[12px] tracking-[0.2em] uppercase mb-2">Premium Collections</h4>
-            <h1 className="text-[48px] font-serif font-bold text-gray-900 mb-4">
-              Budiman Handicraft Catalog
-            </h1>
-            <p className="text-black text-[16px] leading-relaxed max-w-2xl text-justify">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
+            <h1 className="text-[48px] font-serif font-bold text-gray-900 mb-4">Budiman Handicraft Catalog</h1>
+            <p className="text-black text-[16px] leading-relaxed max-w-2xl text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
           </div>
           
           <div className="w-full md:w-auto">
@@ -111,59 +142,100 @@ export default function KatalogPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-[280px] shrink-0 space-y-6">
             <div className="bg-[#141414] rounded-sm p-6 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10 bg-[url('/pattern-awan.png')] bg-cover bg-center pointer-events-none"></div>
+              <div className="absolute inset-0 bg-[url('/awan.svg')] bg-cover bg-[0%_50%] pointer-events-none"></div>
               
               <h3 className="relative z-10 text-2xl font-serif font-bold text-[#ffdb81] mb-6">Collection</h3>
               
               <ul className="relative z-10 space-y-2">
-                {daftarKategori.map((kategori) => (
-                  <li key={kategori}>
-                    <button
-                      onClick={() => setKategoriAktif(kategori)}
-                      className={`w-full text-left px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors rounded-sm ${
-                        kategoriAktif === kategori 
-                          ? 'bg-[#ffdb81] text-black' 
-                          : 'text-gray-300 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      {kategori}
-                    </button>
-                  </li>
-                ))}
+                {daftarKategori.map((item) => {
+                  const isAktif = kategoriAktif === item.nama;
+                  const hasSub = item.subKategori.length > 0;
+                  const isOpen = menuTerbuka === item.nama;
+
+                  return (
+                    <li key={item.nama} className="flex flex-col">
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => {
+                            setKategoriAktif(item.nama);
+                            setCurrentPage(1);
+                            if (hasSub) {
+                              setMenuTerbuka(isOpen ? null : item.nama);
+                            } else {
+                              setMenuTerbuka(null);
+                            }
+                          }}
+                          className={`flex-1 flex items-center justify-between text-left px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors rounded-sm ${
+                            isAktif ? 'bg-[#ffdb81] text-black' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+                        >
+                          <span>{item.nama}</span>
+                          
+                          {hasSub && (
+                            <svg className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+
+                      <div 
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}
+                      >
+                        <div className="overflow-hidden">
+                          <ul className="pl-4 space-y-1 pb-1">
+                            {item.subKategori.map((sub) => {
+                              const isSubAktif = kategoriAktif === sub;
+                              return (
+                                <li key={sub}>
+                                  <button
+                                    onClick={() => {
+                                      setKategoriAktif(sub);
+                                      setCurrentPage(1);
+                                    }}
+                                    className={`w-full flex items-center gap-2 text-left px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors rounded-sm ${
+                                      isSubAktif ? 'text-[#ffdb81]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                  >
+                                    <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    {sub}
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
             <div className="bg-[#f5f4ef] rounded-sm p-6 relative overflow-hidden border border-[#e8e6dd]">
-              <div className="absolute inset-0 opacity-20 bg-[url('/pattern-awan.png')] bg-cover bg-center pointer-events-none"></div>
+              <div className="absolute inset-0 scale-140 bg-[url('/awan_cream.svg')] bg-cover bg-[0%_50%] pointer-events-none"></div>
               
               <div className="relative z-10">
                 <h3 className="text-xl font-serif font-bold text-gray-900 mb-3">Artisan Authenticity</h3>
-                <p className="text-gray-600 text-xs leading-relaxed text-justify mb-4">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.
-                </p>
-                <Link href="#" className="text-[#d77723] font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-wider">
-                  Learn more <span>&rarr;</span>
-                </Link>
+                <p className="text-gray-600 text-xs leading-relaxed text-justify mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+                <Link href="#" className="text-[#d77723] font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-wider">Learn more <span>&rarr;</span></Link>
               </div>
             </div>
           </div>
 
           <div className="flex-1">
             <div className="bg-[#141414] rounded-sm p-8 md:p-10 mb-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="absolute inset-0 opacity-20 bg-[url('/pattern-awan.png')] bg-cover bg-center pointer-events-none"></div>
+              <div className="absolute inset-0 bg-[center_10%] bg-[url('/awan.svg')] bg-cover pointer-events-none"></div>
               
               <div className="relative z-10 max-w-lg">
                 <h4 className="text-[#ffdb81] font-bold text-xs tracking-[0.2em] uppercase mb-2">Our Heritage Story</h4>
                 <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-3">Preserving Sundanese Soul</h2>
-                <p className="text-white text-xs md:text-sm leading-relaxed text-justify">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                </p>
+                <p className="text-white text-xs md:text-sm leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
               </div>
 
               <div className="relative z-10 shrink-0 w-full md:w-auto">
-                <button className="w-full md:w-auto bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-3 px-6 rounded-sm text-sm uppercase tracking-wider transition-colors">
-                  Explore The Studio
-                </button>
+                <button className="w-full md:w-auto bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-3 px-6 rounded-sm text-sm uppercase tracking-wider transition-colors">Explore The Studio</button>
               </div>
             </div>
 
@@ -175,15 +247,12 @@ export default function KatalogPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {produkTampil.map((produk) => (
+                  {currentProducts.map((produk) => (
                     <div key={produk.id} className="flex flex-col group">
                       <Link href={`/katalog/${produk.id}`} className="group-hover:cursor-pointer block">
                         <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4 relative overflow-hidden">
                           {produk.gambar_url ? (
-                            <Image 
-                            src={produk.gambar_url} alt={produk.nama_produk} fill 
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
+                            <Image src={produk.gambar_url} alt={produk.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500"/>
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No Image</div>
                           )}
@@ -196,9 +265,8 @@ export default function KatalogPage() {
                       <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 text-justify mb-4 flex-1">{produk.deskripsi}</p>
                       
                       <button onClick={() => masukkanKeranjang(produk)}
-                        className="w-full py-2.5 border-2 border-gray-900 text-gray-900 font-bold text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors rounded-sm"
-                      >
-                        Add to Cart
+                        className="w-full py-2.5 border-2 border-gray-900 text-gray-900 font-bold text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors rounded-sm cursor-pointer"
+                      >Add to Cart
                       </button>
                     </div>
                   ))}
@@ -206,29 +274,22 @@ export default function KatalogPage() {
 
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-12 pt-8 border-t border-gray-100">
-                    <button 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
-                      className="px-3 py-2 border border-gray-200 rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                      &larr; Prev
+                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
+                      className="px-3 py-2 border border-gray-200 text-black rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
+                    >&larr; Prev
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                      <button
-                        key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`w-10 h-10 flex items-center justify-center border rounded-sm text-sm font-bold transition-colors ${
+                    {getVisiblePages().map((pageNumber) => (
+                      <button key={pageNumber} onClick={() => setCurrentPage(pageNumber)}
+                        className={`w-10 h-10 flex items-center justify-center border rounded-sm text-sm font-bold transition-colors cursor-pointer ${
                           currentPage === pageNumber ? 'bg-[#d97736] border-[#d97736] text-white' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                      >
-                        {pageNumber}
+                      >{pageNumber}
                       </button>
                     ))}
 
-                    <button 
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}
-                      className="px-3 py-2 border border-gray-200 rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                      Next &rarr;
+                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}
+                      className="px-3 py-2 border border-gray-200 text-black rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
+                    >Next &rarr;
                     </button>
                   </div>
                 )}
