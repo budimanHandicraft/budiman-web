@@ -132,12 +132,12 @@ export default function AdminProduk() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-100 border-b">
-                <th className="p-3">Foto</th>
-                <th className="p-3">Nama Produk</th>
-                <th className="p-3">Kategori</th>
-                <th className="p-3">Harga</th>
-                <th className="p-3">Stok</th>
-                <th className="p-3">Aksi</th>
+                <th className="text-black p-3">Foto</th>
+                <th className="text-black p-3">Nama Produk</th>
+                <th className="text-black p-3">Kategori</th>
+                <th className="text-black p-3">Harga</th>
+                <th className="text-black p-3">Stok</th>
+                <th className="text-black p-3">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -149,14 +149,14 @@ export default function AdminProduk() {
                     <td className="p-3">
                       <img src={produk.gambar_url} alt={produk.nama_produk} className="w-16 h-16 object-cover rounded-md border" />
                     </td>
-                    <td className="p-3 font-medium">{produk.nama_produk}</td>
+                    <td className="text-black p-3 font-medium">{produk.nama_produk}</td>
                     <td className="p-3">
                       <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{produk.kategori || 'Umum'}</span>
                     </td>
-                    <td className="p-3">Rp {produk.harga.toLocaleString('id-ID')}</td>
-                    <td className="p-3">{produk.stok}</td>
-                    <td className="p-3">
-                      <button onClick={() => handleDelete(produk.id, produk.gambar_url)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Hapus</button>
+                    <td className="text-black p-3">Rp {produk.harga.toLocaleString('id-ID')}</td>
+                    <td className="text-black p-3">{produk.stok}</td>
+                    <td className="text-black p-3">
+                      <button onClick={() => handleDelete(produk.id, produk.gambar_url)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition cursor-pointer">Hapus</button>
                     </td>
                   </tr>
                 ))
@@ -171,43 +171,43 @@ export default function AdminProduk() {
           <div className="grid grid-cols-1 gap-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Nama Kerajinan</label>
-                <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+                <label className="text-black block text-sm font-medium mb-1">Nama Kerajinan</label>
+                <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} className="text-black w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Kategori</label>
-                <input type="text" required placeholder="Misal: Souvenir, Wayang, Pakaian" value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+                <label className="text-black block text-sm font-medium mb-1">Kategori</label>
+                <input type="text" required placeholder="Misal: Souvenir, Wayang, Pakaian" value={kategori} onChange={(e) => setKategori(e.target.value)} className="text-black w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Deskripsi</label>
-              <textarea rows={3} value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="text-black block text-sm font-medium mb-1">Deskripsi</label>
+              <textarea rows={3} value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} className="text-black w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Harga (Rp)</label>
-                <input type="number" required value={harga} onChange={(e) => setHarga(e.target.value)} className="w-full border p-2 rounded outline-none" />
+                <label className="text-black block text-sm font-medium mb-1">Harga (Rp)</label>
+                <input type="number" required value={harga} onChange={(e) => setHarga(e.target.value)} className="text-black w-full border p-2 rounded outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Stok Gudang</label>
-                <input type="number" required value={stok} onChange={(e) => setStok(e.target.value)} className="w-full border p-2 rounded outline-none" />
+                <label className="text-black block text-sm font-medium mb-1">Stok Barang</label>
+                <input type="number" required value={stok} onChange={(e) => setStok(e.target.value)} className="text-black w-full border p-2 rounded outline-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Berat Barang (Gram) <span className="text-gray-400 font-normal">- Default 1000g (1kg)</span></label>
-              <input type="number" required value={berat} onChange={(e) => setBerat(e.target.value)} className="w-full border p-2 rounded outline-none" />
+              <label className="text-black block text-sm font-medium mb-1">Berat Barang (Gram) <span className="text-gray-400 font-normal">- Default 1000g (1kg)</span></label>
+              <input type="number" required value={berat} onChange={(e) => setBerat(e.target.value)} className="text-black w-full border p-2 rounded outline-none" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Upload Foto Produk</label>
-              <input type="file" accept="image/*" onChange={(e) => setFileGambar(e.target.files?.[0] || null)} className="w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-              <p className="text-xs text-gray-500 mt-1">Sistem otomatis memperkecil ukuran foto (WebP - Max 100KB) agar website tetap cepat.</p>
+              <label className="text-black block text-sm font-medium mb-1">Upload Foto Produk</label>
+              <input type="file" accept="image/*" onChange={(e) => setFileGambar(e.target.files?.[0] || null)} className="text-black w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+              <p className="text-xs text-gray-400 mt-1 italic">Note: Sistem otomatis memperkecil ukuran foto (WebP - Max 100KB) agar website tetap cepat.</p>
             </div>
 
-            <button type="submit" disabled={isLoading} className={`mt-4 w-full text-white font-bold py-3 rounded-lg transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
+            <button type="submit" disabled={isLoading} className={`mt-4 w-full text-white font-bold py-3 rounded-lg transition cursor-pointer ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
               {isLoading ? 'Mengompresi & Menyimpan...' : 'Simpan Produk Baru'}
             </button>
           </div>
