@@ -204,7 +204,7 @@ export default function MarketPage() {
       </section>
 
       <section className="w-full bg-[#161616] mt-auto relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('/pattern-awan.png')] bg-cover bg-center pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-10 bg-[url('/awan.svg')] bg-cover bg-center pointer-events-none"></div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
           <h2 className="text-2xl font-serif font-bold text-white mb-8">Order Summary</h2>
           <div className="space-y-6 mb-8">
