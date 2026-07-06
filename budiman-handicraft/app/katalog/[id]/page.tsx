@@ -13,7 +13,7 @@ interface Produk {
   harga: number;
   berat_gram: number;
   stok: number;
-  gambar_url: string;
+  gambar_url: string[];
   kategori: string;
 }
 
@@ -41,7 +41,7 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
       if (produkData) {
         setProduk(produkData);
-        setGambarUtama(produkData.gambar_url);
+        setGambarUtama(produkData.gambar_url?.[0] || ''); 
       }
 
       const { data: rekomendasi } = await supabase
@@ -57,12 +57,6 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
     fetchDetailProduk();
   }, [params.id]);
-
-  const galeriSimulasi = produk ? [
-    produk.gambar_url,
-    'https://via.placeholder.com/400x533.png?text=Sudut+Kiri',
-    'https://via.placeholder.com/400x533.png?text=Sudut+Kanan',
-  ] : [];
 
   const tambahKeKeranjang = (langsungCheckout = false) => {
     if (!produk) return;
@@ -93,14 +87,15 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold">Memuat detail produk...</div>;
   if (!produk) return <div className="min-h-screen flex items-center justify-center font-bold">Produk tidak ditemukan.</div>;
+  const galeriAsli = produk.gambar_url || [];
 
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           <div className="lg:col-span-5 flex gap-4">
-            <div className="flex flex-col gap-4 w-20 shrink-0">
-              {galeriSimulasi.map((img, idx) => (
+            <div className="flex flex-col gap-4 w-20 shrink-0 max-h-[500px] overflow-y-auto no-scrollbar">
+              {galeriAsli.map((img, idx) => (
                 <button 
                   key={idx}
                   onClick={() => setGambarUtama(img)}
@@ -110,6 +105,7 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
                 </button>
               ))}
             </div>
+
             <div className="flex-1 aspect-[4/5] relative bg-[#e3e8de] rounded-sm overflow-hidden">
               {gambarUtama ? (
                 <Image src={gambarUtama} alt={produk.nama_produk} fill className="object-cover" />
@@ -128,12 +124,12 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
             <div className="flex flex-col gap-3 mb-8">
               <button onClick={() => tambahKeKeranjang(false)}
-                className="w-full bg-[#f0f0f0] hover:bg-gray-200 text-gray-900 font-bold py-3 px-4 rounded-sm text-xs flex items-center justify-center gap-2 uppercase tracking-widest transition-colors">
+                className="w-full bg-[#f0f0f0] hover:bg-gray-200 text-gray-900 font-bold py-3 px-4 rounded-sm text-xs flex items-center justify-center gap-2 uppercase tracking-widest transition-colors cursor-pointer">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 Add to Cart
               </button>
               <button onClick={() => tambahKeKeranjang(true)}
-                className="w-full border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-bold py-3 px-4 rounded-sm text-xs uppercase tracking-widest transition-colors">
+                className="w-full border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-bold py-3 px-4 rounded-sm text-xs uppercase tracking-widest transition-colors cursor-pointer">
                 Buy Now
               </button>
             </div>
@@ -159,7 +155,9 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
               <h3 className="font-serif font-bold text-lg mb-4">The Story Behind This Piece</h3>
               <div className="flex gap-4 mb-4">
                 <div className="w-24 h-24 bg-[#e3e8de] rounded-sm shrink-0 relative overflow-hidden">
-                   <Image src={produk.gambar_url} alt="Story" fill className="object-cover" />
+                   {produk.gambar_url?.[0] && (
+                     <Image src={produk.gambar_url[0]} alt="Story" fill className="object-cover" />
+                   )}
                 </div>
                 <p className="text-[10px] text-gray-500 leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
               </div>
@@ -264,11 +262,13 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
             {produkLain.map((item) => (
               <Link href={`/katalog/${item.id}`} key={item.id} className="group">
                 <div className="aspect-[4/3] bg-[#e3e8de] rounded-sm mb-4 relative overflow-hidden">
-                  {item.gambar_url ? (
-                    <Image src={item.gambar_url} alt={item.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+
+                  {item.gambar_url?.[0] ? (
+                    <Image src={item.gambar_url[0]} alt={item.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">No Image</div>
                   )}
+                  
                 </div>
                 <div className="text-center">
                   <h3 className="text-white font-bold uppercase tracking-wider mb-1 group-hover:text-[#d97736] transition-colors">{item.nama_produk}</h3>
