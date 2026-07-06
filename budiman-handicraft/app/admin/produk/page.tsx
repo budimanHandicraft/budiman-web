@@ -156,7 +156,7 @@ export default function AdminProduk() {
                     <td className="text-black p-3">Rp {produk.harga.toLocaleString('id-ID')}</td>
                     <td className="text-black p-3">{produk.stok}</td>
                     <td className="text-black p-3">
-                      <button onClick={() => handleDelete(produk.id, produk.gambar_url)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition cursor-pointer">Hapus</button>
+                      <button onClick={() => handleDelete(produk.id, produk.gambar_url)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Hapus</button>
                     </td>
                   </tr>
                 ))
