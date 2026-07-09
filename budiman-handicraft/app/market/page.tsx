@@ -10,6 +10,7 @@ interface CartItem {
   harga: number;
   gambar_url: string[];
   kuantitas: number;
+  berat_gram?: number;
   catatan?: string;
 }
 
@@ -88,7 +89,7 @@ export default function MarketPage() {
         const res = await fetch(`/api/ongkir`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin: "4816", destination: selectedDestination, weight: "1000", courier: "jne" })
+          body: JSON.stringify({ origin: "4816", destination: selectedDestination, weight: beratKirim.toString(), courier: "jne" })
         });
         const data = await res.json();
         if (data?.data && data.data.length > 0) {
@@ -141,6 +142,8 @@ export default function MarketPage() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
+  const totalBerat = cartItems.reduce((sum, item) => sum + ((item.berat_gram || 100) * item.kuantitas), 0);
+  const beratKirim = totalBerat < 1000 ? 1000 : totalBerat;
   const grandTotal = subtotal + shippingCost;
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
 
