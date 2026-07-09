@@ -9,9 +9,20 @@ interface Produk {
   id: string;
   nama_produk: string;
   harga: number;
+  stok: number;
   deskripsi: string;
   kategori: string;
   gambar_url: string[];
+}
+
+interface Varian {
+  id: string;
+  tipe_varian_1: string | null;
+  nilai_varian_1: string | null;
+  tipe_varian_2: string | null;
+  nilai_varian_2: string | null;
+  harga: number | null;
+  stok: number | null;
 }
 
 export default function KatalogPage() {
@@ -22,6 +33,13 @@ export default function KatalogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Produk | null>(null);
+  const [varianList, setVarianList] = useState<Varian[]>([]);
+  const [isFetchingVarian, setIsFetchingVarian] = useState(false);
+  const [selectedVarian, setSelectedVarian] = useState<Varian | null>(null);
+  const [kuantitas, setKuantitas] = useState(1);
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -30,8 +48,15 @@ export default function KatalogPage() {
   const daftarKategori = [
     { nama: 'ALL PRODUCT', subKategori: [] },
     { nama: 'WAYANG GOLEK', subKategori: ['WG ORDINARY QUALITY', 'WG MEDIUM QUALITY', 'WG MINI & TABUNG', 'WG KARAKTER BINATANG']},
-    { nama: 'BUSUR PANAH', subKategori: [] },
-    { nama: 'AKSESORIS', subKategori: [] }
+    { nama: 'ALAT MUSIK TRADISIONAL & MAINAN ANAK', subKategori: [] },
+    { nama: 'BAHAN HANDICRAFT', subKategori: [] },
+    { nama: 'BAMBOO PRODUCT', subKategori: [] },
+    { nama: 'HIASAN DEKORASI RUMAH', subKategori: [] },
+    { nama: 'MAHARDIKA CULTURAL HERITAGE T-SHIRT', subKategori: [] },
+    { nama: 'PANAHAN', subKategori: [] },
+    { nama: 'PIPA ROKOK TULANG SAPI', subKategori: [] },
+    { nama: 'SOUVENIR & AKSESORIS', subKategori: [] },
+    { nama: 'TOPENG', subKategori: [] }
   ];
   const [menuTerbuka, setMenuTerbuka] = useState<string | null>(null);
 
@@ -66,7 +91,7 @@ export default function KatalogPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  // LOGIKA SLIDING WINDOW DENGAN BOUNDARY PADDING (TETAP 10 HALAMAN)
+
   const getVisiblePages = () => {
     const batasTampil = 10;
     const lompatan = 4;
@@ -93,30 +118,67 @@ export default function KatalogPage() {
     return pages;
   };
 
-  const masukkanKeranjang = (produk: Produk) => {
+  const bukaModalKeranjang = async (produk: Produk) => {
+    setSelectedProduct(produk);
+    setKuantitas(1);
+    setSelectedVarian(null);
+    setIsModalOpen(true);
+    setIsFetchingVarian(true);
+
+    const { data, error } = await supabase
+      .from('produk_varian')
+      .select('*')
+      .eq('produk_id', produk.id);
+
+    if (!error && data) {
+      setVarianList(data);
+    } else {
+      setVarianList([]);
+    }
+    setIsFetchingVarian(false);
+  };
+
+  const hargaTampil = selectedVarian?.harga ?? selectedProduct?.harga ?? 0;
+  const stokTampil = selectedVarian?.stok ?? selectedProduct?.stok ?? 0;
+
+  const handleKuantitas = (type: 'plus' | 'min') => {
+    if (type === 'plus' && kuantitas < stokTampil) setKuantitas(prev => prev + 1);
+    if (type === 'min' && kuantitas > 1) setKuantitas(prev => prev - 1);
+  };
+
+  const konfirmasiKeranjang = () => {
+    if (!selectedProduct) return;
+    if (varianList.length > 0 && !selectedVarian) {
+      alert('Silakan pilih varian produk terlebih dahulu.');
+      return;
+    }
+
     const keranjangLama = localStorage.getItem('keranjang_umkm');
     let keranjang = keranjangLama ? JSON.parse(keranjangLama) : [];
     
-    const indexProduk = keranjang.findIndex((item: any) => item.id === produk.id);
+    const cartItemId = selectedVarian ? selectedVarian.id : selectedProduct.id;
+    const indexProduk = keranjang.findIndex((item: any) => item.id === cartItemId);
     
     if (indexProduk > -1) {
-      keranjang[indexProduk].kuantitas += 1;
+      keranjang[indexProduk].kuantitas += kuantitas;
     } else {
       keranjang.push({
-        id: produk.id,
-        nama_produk: produk.nama_produk,
-        harga: produk.harga,
-        gambar_url: produk.gambar_url,
-        kuantitas: 1
+        id: cartItemId, 
+        nama_produk: selectedProduct.nama_produk,
+        varian_nama: selectedVarian ? `${selectedVarian.nilai_varian_1 || ''} ${selectedVarian.nilai_varian_2 || ''}`.trim() : null,
+        harga: hargaTampil,
+        gambar_url: selectedProduct.gambar_url,
+        kuantitas: kuantitas
       });
     }
     
     localStorage.setItem('keranjang_umkm', JSON.stringify(keranjang));
-    alert(`${produk.nama_produk} berhasil ditambahkan ke keranjang!`);
+    alert(`${selectedProduct.nama_produk} berhasil ditambahkan ke keranjang!`);
+    setIsModalOpen(false);
   };
 
   return (
-    <main className="w-full min-h-screen bg-white p-20 mx-auto">
+    <main className="w-full min-h-screen bg-white p-20 mx-auto relative">
       <div className="pt-12 pb-8">
         <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-gray-100 pb-8">
           <div className="max-w-3xl">
@@ -263,9 +325,8 @@ export default function KatalogPage() {
                       </Link>
                       
                       <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 text-justify mb-4 flex-1">{produk.deskripsi}</p>
-                      
-                      <button onClick={() => masukkanKeranjang(produk)}
-                        className="w-full py-2.5 border-2 border-gray-900 text-gray-900 font-bold text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors rounded-sm cursor-pointer"
+                      <button onClick={() => bukaModalKeranjang(produk)}
+                        className="w-full py-2.5 border-2 border-gray-900 text-gray-900 font-bold text-xs uppercase tracking-widest hover:bg-[#d97736] hover:border-[#d97736] hover:text-white transition-colors rounded-sm cursor-pointer"
                       >Add to Cart
                       </button>
                     </div>
@@ -299,6 +360,104 @@ export default function KatalogPage() {
           </div>
         </div>
       </div>
+
+      {/*POP-UP MODAL (VARIANT SELECTION)*/}
+      {isModalOpen && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-sm w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 z-10 p-2 bg-white/80 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="p-6">
+              <div className="flex gap-4 mb-6">
+                <div className="w-24 h-24 bg-gray-100 rounded-sm shrink-0 relative overflow-hidden border border-gray-200">
+                  {selectedProduct.gambar_url?.[0] ? (
+                    <Image src={selectedProduct.gambar_url[0]} alt={selectedProduct.nama_produk} fill className="object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[10px]">No Image</div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-center">
+                  <h3 className="font-serif font-bold text-gray-900 text-lg leading-tight mb-1">{selectedProduct.nama_produk}</h3>
+                  <p className="text-[#d97736] font-bold text-xl mb-1">
+                    Rp {hargaTampil.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium tracking-wide">
+                    Sisa Stok: <span className="text-gray-900">{stokTampil}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Tampilkan Loading atau Varian */}
+              {isFetchingVarian ? (
+                <div className="py-8 text-center text-sm text-gray-500 font-medium">Memuat spesifikasi...</div>
+              ) : varianList.length > 0 ? (
+                <div className="mb-6">
+                  <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Pilih Varian</p>
+                  <div className="flex flex-wrap gap-2">
+                    {varianList.map((varian) => (
+                      <button
+                        key={varian.id}
+                        onClick={() => {
+                          setSelectedVarian(varian);
+                          setKuantitas(1);
+                        }}
+                        className={`px-4 py-2 border rounded-sm text-xs font-bold uppercase transition-all ${
+                          selectedVarian?.id === varian.id 
+                            ? 'bg-gray-900 border-gray-900 text-white shadow-md scale-95' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:border-gray-900'
+                        }`}
+                      >
+                        {varian.nilai_varian_1} {varian.nilai_varian_2 ? `- ${varian.nilai_varian_2}` : ''}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Pengaturan Kuantitas */}
+              <div className="flex items-center justify-between mb-8 border-t border-gray-100 pt-6">
+                <span className="text-xs font-bold text-gray-900 uppercase tracking-widest">Kuantitas</span>
+                <div className="flex items-center border border-gray-300 rounded-sm overflow-hidden">
+                  <button 
+                    onClick={() => handleKuantitas('min')} 
+                    disabled={kuantitas <= 1}
+                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                  >
+                    -
+                  </button>
+                  <div className="w-12 h-10 flex items-center justify-center font-bold text-sm text-black bg-white border-x border-gray-300">
+                    {kuantitas}
+                  </div>
+                  <button 
+                    onClick={() => handleKuantitas('plus')} 
+                    disabled={kuantitas >= stokTampil}
+                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Tombol Eksekusi */}
+              <button 
+                onClick={konfirmasiKeranjang}
+                disabled={stokTampil === 0 || (varianList.length > 0 && !selectedVarian)}
+                className="w-full bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-3.5 px-4 rounded-sm text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {stokTampil === 0 ? 'Stok Habis' : 'Konfirmasi Keranjang'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
