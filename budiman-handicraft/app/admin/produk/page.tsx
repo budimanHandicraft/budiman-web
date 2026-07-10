@@ -16,6 +16,19 @@ interface Produk {
   kategori: string;
 }
 
+// ===== INTERFACE VARIAN BARU =====
+interface Varian {
+  id: string;
+  produk_id: string;
+  tipe_varian_1: string | null;
+  nilai_varian_1: string | null;
+  tipe_varian_2: string | null;
+  nilai_varian_2: string | null;
+  harga: number | string | null;
+  stok: number | string | null;
+  isNew?: boolean; // Penanda khusus untuk UI frontend
+}
+
 export default function AdminProduk() {
   const [activeTab, setActiveTab] = useState<'daftar' | 'tambah'>('daftar');
   const [produkList, setProdukList] = useState<Produk[]>([]);
@@ -36,6 +49,10 @@ export default function AdminProduk() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<Produk | null>(null);
   const [editFileGambar, setEditFileGambar] = useState<FileList | null>(null);
+
+  // ===== STATE KHUSUS VARIAN DI MODAL EDIT =====
+  const [varianList, setVarianList] = useState<Varian[]>([]);
+  const [isLoadingVarian, setIsLoadingVarian] = useState(false);
 
   useEffect(() => {
     fetchProduk();
@@ -102,18 +119,69 @@ export default function AdminProduk() {
     }
   };
 
-  const bukaModalEdit = (produk: Produk) => {
+  // ===== LOGIKA MEMBUKA MODAL & MENARIK DATA VARIAN =====
+  const bukaModalEdit = async (produk: Produk) => {
     setEditData(produk);
     setEditFileGambar(null);
+    setVarianList([]); // Reset dulu
     setIsEditModalOpen(true);
+    
+    setIsLoadingVarian(true);
+    const { data } = await supabase
+      .from('produk_varian')
+      .select('*')
+      .eq('produk_id', produk.id)
+      .order('created_at', { ascending: true });
+      
+    if (data) setVarianList(data);
+    setIsLoadingVarian(false);
   };
 
+  // ===== FUNGSI KELOLA STATE VARIAN LOKAL =====
+  const tambahVarianKosong = () => {
+    if (!editData) return;
+    setVarianList([...varianList, {
+      id: `temp-${Date.now()}`, // ID sementara untuk rendering React
+      produk_id: editData.id,
+      tipe_varian_1: '',
+      nilai_varian_1: '',
+      tipe_varian_2: null,
+      nilai_varian_2: null,
+      harga: '',
+      stok: '',
+      isNew: true // Tandai bahwa ini varian baru yang belum masuk DB
+    }]);
+  };
+
+  const updateLocalVarian = (index: number, field: keyof Varian, value: string) => {
+    const newList = [...varianList];
+    newList[index] = { ...newList[index], [field]: value };
+    setVarianList(newList);
+  };
+
+  const hapusLocalVarian = async (index: number, id: string, isNew?: boolean) => {
+    const konfirmasi = confirm('Yakin hapus varian ini?');
+    if (!konfirmasi) return;
+
+    // Jika varian sudah ada di DB (bukan varian baru dibikin), hapus dari Supabase langsung
+    if (!isNew) {
+      await supabase.from('produk_varian').delete().eq('id', id);
+    }
+    
+    // Hapus dari tampilan layar
+    const newList = [...varianList];
+    newList.splice(index, 1);
+    setVarianList(newList);
+  };
+
+  // ===== LOGIKA UPDATE PRODUK INDUK + BATCH UPSERT VARIAN =====
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editData) return;
     
     setIsLoading(true);
     try {
+      // 1. Urus Gambar & Data Induk
       let finalImageUrl: string[] = editData.gambar_url;
       if (editFileGambar && editFileGambar.length > 0) {
         finalImageUrl = await uploadMultipleImages(editFileGambar);
@@ -133,8 +201,34 @@ export default function AdminProduk() {
         .eq('id', editData.id);
 
       if (dbError) throw dbError;
-      alert('Produk berhasil diperbarui!');
-      
+
+      // 2. Urus Sinkronisasi Data Varian (Batch Upsert)
+      if (varianList.length > 0) {
+        const variantsToSave = varianList.map(v => {
+          const payload: any = { ...v };
+          
+          // Hapus ID sementara jika ini varian baru agar DB membuatkan UUID asli
+          if (payload.isNew) {
+             delete payload.id;
+             delete payload.isNew;
+          }
+          
+          // Konversi string kosong menjadi NULL sesuai Skenario 3
+          payload.harga = (payload.harga === '' || payload.harga === null || isNaN(Number(payload.harga))) ? null : parseInt(payload.harga);
+          payload.stok = (payload.stok === '' || payload.stok === null || isNaN(Number(payload.stok))) ? null : parseInt(payload.stok);
+          
+          // Konversi string kosong tipe/nilai menjadi NULL
+          payload.tipe_varian_1 = payload.tipe_varian_1 === '' ? null : payload.tipe_varian_1;
+          payload.nilai_varian_1 = payload.nilai_varian_1 === '' ? null : payload.nilai_varian_1;
+
+          return payload;
+        });
+
+        const { error: varianError } = await supabase.from('produk_varian').upsert(variantsToSave);
+        if (varianError) throw varianError;
+      }
+
+      alert('Produk & Varian berhasil diperbarui!');
       setIsEditModalOpen(false);
       fetchProduk();
     } catch (error: any) {
@@ -145,8 +239,10 @@ export default function AdminProduk() {
   };
 
   const handleDelete = async (id: string, gambarUrl: string[]) => {
-    const confirmDelete = confirm('Yakin ingin menghapus produk ini?');
+    const confirmDelete = confirm('Yakin ingin menghapus produk ini beserta seluruh variannya?');
     if (!confirmDelete) return;
+    
+    // Hapus foto di storage
     for (const url of gambarUrl) {
       const namaFile = url.split('/').pop();
       if (namaFile) {
@@ -154,6 +250,7 @@ export default function AdminProduk() {
       }
     }
 
+    // Supabase otomatis menghapus variannya jika ada relasi CASCADE (atau kita hapus manual produknya)
     await supabase.from('produk').delete().eq('id', id);
     alert('Produk berhasil dihapus!');
     fetchProduk();
@@ -198,8 +295,8 @@ export default function AdminProduk() {
                   <th className="text-black p-3 w-20">Foto</th>
                   <th className="text-black p-3">Nama Produk</th>
                   <th className="text-black p-3">Kategori</th>
-                  <th className="text-black p-3">Harga</th>
-                  <th className="text-black p-3">Stok</th>
+                  <th className="text-black p-3">Harga Dasar</th>
+                  <th className="text-black p-3">Stok Induk</th>
                   <th className="text-black p-3 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -208,7 +305,7 @@ export default function AdminProduk() {
                   <tr><td colSpan={6} className="text-center p-8 text-gray-500">Produk tidak ditemukan.</td></tr>
                 ) : (
                   currentProducts.map((produk) => {
-                    const gambarUtama = produk.gambar_url?.[0] || '';
+                    const gambarUtama = produk.gambar_url?.[0];
                     return (
                       <tr key={produk.id} className="border-b hover:bg-gray-50">
                         <td className="p-3">
@@ -223,8 +320,8 @@ export default function AdminProduk() {
                         
                         <td className="p-3">
                           <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => bukaModalEdit(produk)} className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition cursor-pointer text-sm">Edit</button>
-                            <button onClick={() => handleDelete(produk.id, produk.gambar_url || [])} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition cursor-pointer text-sm">Hapus</button>
+                            <button onClick={() => bukaModalEdit(produk)} className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition cursor-pointer text-sm font-medium">Edit / Varian</button>
+                            <button onClick={() => handleDelete(produk.id, produk.gambar_url || [])} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition cursor-pointer text-sm font-medium">Hapus</button>
                           </div>
                         </td>
                       </tr>
@@ -249,6 +346,7 @@ export default function AdminProduk() {
         </div>
       )}
 
+      {/* TABS TAMBAH PRODUK (TIDAK BERUBAH) */}
       {activeTab === 'tambah' && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border max-w-2xl">
           <div className="grid grid-cols-1 gap-4">
@@ -270,11 +368,11 @@ export default function AdminProduk() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-black block text-sm font-medium mb-1">Harga (Rp)</label>
+                <label className="text-black block text-sm font-medium mb-1">Harga Dasar (Rp)</label>
                 <input type="number" required min="0" value={harga} onChange={(e) => setHarga(e.target.value)} className="text-black w-full border p-2 rounded outline-none" />
               </div>
               <div>
-                <label className="text-black block text-sm font-medium mb-1">Stok Barang</label>
+                <label className="text-black block text-sm font-medium mb-1">Stok Total/Induk</label>
                 <input type="number" required min="0" value={stok} onChange={(e) => setStok(e.target.value)} className="text-black w-full border p-2 rounded outline-none" />
               </div>
             </div>
@@ -292,61 +390,112 @@ export default function AdminProduk() {
             <button type="submit" disabled={isLoading} className={`mt-4 w-full text-white font-bold py-3 rounded-lg transition cursor-pointer ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
               {isLoading ? 'Menyimpan & Mengompresi Foto...' : 'Simpan Produk Baru'}
             </button>
+            <p className="text-xs text-gray-500 text-center italic mt-1">Catatan: Untuk menambah varian, silakan simpan produk baru ini terlebih dahulu, lalu klik tombol Edit.</p>
           </div>
         </form>
       )}
 
       {isEditModalOpen && editData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <form onSubmit={handleUpdate} className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Edit Produk</h3>
+          <form onSubmit={handleUpdate} className="bg-white w-full max-w-4xl rounded-xl shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Edit Data Induk & Varian</h3>
             
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-black block text-sm font-medium mb-1">Nama</label>
-                  <input type="text" required value={editData.nama_produk} onChange={(e) => setEditData({...editData, nama_produk: e.target.value})} className="text-black w-full border p-2 rounded outline-none" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* KOLOM KIRI: Data Produk Induk */}
+              <div className="flex flex-col gap-4">
+                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider bg-gray-100 p-2 rounded">Detail Induk Produk</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-black block text-xs font-medium mb-1">Nama Produk</label>
+                    <input type="text" required value={editData.nama_produk} onChange={(e) => setEditData({...editData, nama_produk: e.target.value})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-black block text-xs font-medium mb-1">Kategori</label>
+                    <input type="text" required value={editData.kategori} onChange={(e) => setEditData({...editData, kategori: e.target.value})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="text-black block text-sm font-medium mb-1">Kategori</label>
-                  <input type="text" required value={editData.kategori} onChange={(e) => setEditData({...editData, kategori: e.target.value})} className="text-black w-full border p-2 rounded outline-none" />
+                  <label className="text-black block text-xs font-medium mb-1">Deskripsi</label>
+                  <textarea rows={3} required value={editData.deskripsi} onChange={(e) => setEditData({...editData, deskripsi: e.target.value})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-black block text-xs font-medium mb-1">Harga Dasar</label>
+                    <input type="number" required min="0" value={editData.harga} onChange={(e) => setEditData({...editData, harga: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-black block text-xs font-medium mb-1">Stok Total</label>
+                    <input type="number" required min="0" value={editData.stok} onChange={(e) => setEditData({...editData, stok: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-black block text-xs font-medium mb-1">Berat (g)</label>
+                    <input type="number" required min="0" value={editData.berat_gram} onChange={(e) => setEditData({...editData, berat_gram: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 text-sm rounded outline-none" />
+                  </div>
+                </div>
+
+                <div className="mt-2 border-t pt-4">
+                  <label className="text-black block text-xs font-medium mb-1">Timpa/Ganti Foto Lama (Opsional)</label>
+                  <input type="file" multiple accept="image/*" onChange={(e) => setEditFileGambar(e.target.files)} className="text-black w-full border p-2 rounded file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer text-sm" />
+                  <p className="text-[10px] text-gray-400 mt-1 italic">Kosongkan jika tidak ingin mengubah foto. Jika diisi, foto lama akan tertimpa.</p>
                 </div>
               </div>
 
-              <div>
-                <label className="text-black block text-sm font-medium mb-1">Deskripsi</label>
-                <textarea rows={3} required value={editData.deskripsi} onChange={(e) => setEditData({...editData, deskripsi: e.target.value})} className="text-black w-full border p-2 rounded outline-none" />
+              {/* KOLOM KANAN: Manajemen Varian */}
+              <div className="flex flex-col gap-4 border-l pl-0 md:pl-8 mt-6 md:mt-0">
+                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider bg-gray-100 p-2 rounded flex justify-between items-center">
+                  Daftar Varian
+                  {isLoadingVarian && <span className="text-[10px] text-orange-500 lowercase normal-case">Memuat...</span>}
+                </h4>
+                
+                <div className="max-h-[300px] overflow-y-auto pr-2 space-y-3">
+                  {varianList.map((v, idx) => (
+                    <div key={v.id} className="text-black flex flex-wrap gap-2 items-end bg-gray-50 p-3 rounded border border-gray-200 shadow-sm relative">
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="text-[10px] font-bold uppercase mb-1 block">Tipe (Msl: Warna)</label>
+                        <input type="text" placeholder="Kosongi = Hapus" value={v.tipe_varian_1 || ''} onChange={(e) => updateLocalVarian(idx, 'tipe_varian_1', e.target.value)} className="w-full border p-1.5 text-xs rounded outline-none focus:border-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="text-[10px] font-bold uppercase mb-1 block">Nilai (Msl: Merah)</label>
+                        <input type="text" value={v.nilai_varian_1 || ''} onChange={(e) => updateLocalVarian(idx, 'nilai_varian_1', e.target.value)} className="w-full border p-1.5 text-xs rounded outline-none focus:border-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-[90px]">
+                        <label className="text-[10px] font-bold uppercase mb-1 block">Harga Khusus</label>
+                        <input type="number" placeholder="Ikut Induk" value={v.harga || ''} onChange={(e) => updateLocalVarian(idx, 'harga', e.target.value)} className="w-full border p-1.5 text-xs rounded outline-none focus:border-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-[70px]">
+                        <label className="text-[10px] font-bold uppercase mb-1 block">Stok Varian</label>
+                        <input type="number" placeholder="Gabung" value={v.stok || ''} onChange={(e) => updateLocalVarian(idx, 'stok', e.target.value)} className="w-full border p-1.5 text-xs rounded outline-none focus:border-orange-500" />
+                      </div>
+                      
+                      <button type="button" onClick={() => hapusLocalVarian(idx, v.id, v.isNew)} className="bg-red-100 hover:bg-red-500 text-red-600 hover:text-white px-2.5 py-1.5 rounded transition-colors text-xs font-bold mb-[1px] cursor-pointer">
+                        X
+                      </button>
+                    </div>
+                  ))}
+
+                  <button type="button" onClick={tambahVarianKosong} className="w-full py-2.5 border-2 border-dashed border-gray-300 text-gray-500 rounded text-xs font-bold uppercase tracking-widest hover:bg-orange-50 hover:border-orange-400 hover:text-orange-600 transition-colors cursor-pointer">
+                    + Tambah Baris Varian
+                  </button>
+                </div>
+                
+                <p className="text-[10px] text-gray-400 italic text-justify">
+                  *Kosongkan kolom Harga jika harganya sama dengan harga induk. Kosongkan kolom Stok jika stoknya tidak dipisah per varian (memotong stok total/induk).
+                </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-black block text-sm font-medium mb-1">Harga (Rp)</label>
-                  <input type="number" required min="0" value={editData.harga} onChange={(e) => setEditData({...editData, harga: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 rounded outline-none" />
-                </div>
-                <div>
-                  <label className="text-black block text-sm font-medium mb-1">Stok</label>
-                  <input type="number" required min="0" value={editData.stok} onChange={(e) => setEditData({...editData, stok: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 rounded outline-none" />
-                </div>
-                <div>
-                  <label className="text-black block text-sm font-medium mb-1">Berat (g)</label>
-                  <input type="number" required min="0" value={editData.berat_gram} onChange={(e) => setEditData({...editData, berat_gram: parseInt(e.target.value) || 0})} className="text-black w-full border p-2 rounded outline-none" />
-                </div>
-              </div>
+            </div>
 
-              <div className="mt-2 border-t pt-4">
-                <label className="text-black block text-sm font-medium mb-1">Timpa/Ganti Foto Lama (Opsional)</label>
-                <input type="file" multiple accept="image/*" onChange={(e) => setEditFileGambar(e.target.files)} className="text-black w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer" />
-                <p className="text-xs text-gray-400 mt-1 italic">Kosongkan jika tidak ingin mengubah foto. Jika diisi, foto lama akan tertimpa (Bisa Upload Banyak).</p>
-              </div>
-
-              <div className="flex gap-3 mt-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 border text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition cursor-pointer">
-                  Batal
-                </button>
-                <button type="submit" disabled={isLoading} className={`flex-1 text-white font-bold py-3 rounded-lg transition cursor-pointer ${isLoading ? 'bg-gray-400' : 'bg-orange-600 hover:bg-orange-700'}`}>
-                  {isLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </button>
-              </div>
+            {/* ===== TOMBOL EKSEKUSI BATCH ===== */}
+            <div className="flex gap-3 mt-8 pt-4 border-t border-gray-200">
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition cursor-pointer">
+                Batal
+              </button>
+              <button type="submit" disabled={isLoading} className={`flex-[2] text-white font-bold py-3 rounded-lg transition cursor-pointer ${isLoading ? 'bg-gray-400' : 'bg-[#d97736] hover:bg-[#c2662b]'}`}>
+                {isLoading ? 'Menyimpan ke Database...' : 'Simpan Semua Perubahan (Induk & Varian)'}
+              </button>
             </div>
           </form>
         </div>
