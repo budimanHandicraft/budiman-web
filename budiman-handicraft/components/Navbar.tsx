@@ -74,8 +74,8 @@ export default function Navbar() {
             <div className="hidden md:flex gap-16">
               <Link href="/" className={`text-[20px] font-medium transition-colors ${pathname === '/' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>About Us</Link>
               <Link href="/katalog" className={`text-[20px] font-medium transition-colors ${pathname === '/katalog' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Catalog</Link>
-              <Link href="/#" className={`text-[20px] font-medium transition-colors ${pathname === '/artisans' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Artisans</Link>
-              <Link href="/#" className={`text-[20px] font-medium transition-colors ${pathname === '/history' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>History</Link>
+              <Link href="/artisan" className={`text-[20px] font-medium transition-colors ${pathname === '/artisans' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Artisans</Link>
+              <Link href="/history" className={`text-[20px] font-medium transition-colors ${pathname === '/history' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>History</Link>
             </div>
 
           <div className="flex items-center gap-12">
