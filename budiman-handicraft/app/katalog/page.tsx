@@ -227,7 +227,7 @@ export default function KatalogPage() {
                               setMenuTerbuka(null);
                             }
                           }}
-                          className={`flex-1 flex items-center justify-between text-left px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors rounded-sm ${
+                          className={`flex-1 flex items-center justify-between text-left px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors rounded-sm cursor-pointer ${
                             isAktif ? 'bg-[#ffdb81] text-black' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
                         >
                           <span>{item.nama}</span>
@@ -255,7 +255,7 @@ export default function KatalogPage() {
                                       setKategoriAktif(sub);
                                       setCurrentPage(1);
                                     }}
-                                    className={`w-full flex items-center gap-2 text-left px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors rounded-sm ${
+                                    className={`w-full flex items-center gap-2 text-left px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors rounded-sm cursor-pointer ${
                                       isSubAktif ? 'text-[#ffdb81]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                   >
                                     <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
