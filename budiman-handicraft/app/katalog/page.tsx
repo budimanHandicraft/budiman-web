@@ -364,7 +364,7 @@ export default function KatalogPage() {
       {/*POP-UP MODAL (VARIANT SELECTION)*/}
       {isModalOpen && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-sm w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-sm w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
             
             <button 
               onClick={() => setIsModalOpen(false)}
@@ -375,21 +375,21 @@ export default function KatalogPage() {
               </svg>
             </button>
 
-            <div className="p-6">
-              <div className="flex gap-4 mb-6">
-                <div className="w-24 h-24 bg-gray-100 rounded-sm shrink-0 relative overflow-hidden border border-gray-200">
+            <div className="p-6 overflow-y-auto">
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <div className="w-60 h-60 bg-gray-100 rounded-sm flex items-center justify-center shrink-0 relative overflow-hidden border border-gray-200">
                   {selectedProduct.gambar_url?.[0] ? (
                     <Image src={selectedProduct.gambar_url[0]} alt={selectedProduct.nama_produk} fill className="object-cover" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[10px]">No Image</div>
                   )}
                 </div>
-                <div className="flex flex-col justify-center">
-                  <h3 className="font-serif font-bold text-gray-900 text-lg leading-tight mb-1">{selectedProduct.nama_produk}</h3>
-                  <p className="text-[#d97736] font-bold text-xl mb-1">
+                <h3 className="font-serif font-bold text-gray-900 text-[16px] leading-tight mt-2">{selectedProduct.nama_produk}</h3>
+                <div className="w-full flex flex-row items-center justify-between">
+                  <p className="text-[#d97736] font-bold text-[18px]">
                     Rp {hargaTampil.toLocaleString('id-ID')}
                   </p>
-                  <p className="text-xs text-gray-500 font-medium tracking-wide">
+                  <p className="text-[10px] text-gray-500 font-medium tracking-wide">
                     Sisa Stok: <span className="text-gray-900">{stokTampil}</span>
                   </p>
                 </div>
@@ -399,9 +399,9 @@ export default function KatalogPage() {
               {isFetchingVarian ? (
                 <div className="py-8 text-center text-sm text-gray-500 font-medium">Memuat spesifikasi...</div>
               ) : varianList.length > 0 ? (
-                <div className="mb-6">
-                  <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Pilih Varian</p>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mb-4">
+                  <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-2 border-b border-gray-100 pb-2">Pilih Varian</p>
+                  <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1 pb-2">
                     {varianList.map((varian) => (
                       <button
                         key={varian.id}
@@ -423,7 +423,7 @@ export default function KatalogPage() {
               ) : null}
 
               {/* Pengaturan Kuantitas */}
-              <div className="flex items-center justify-between mb-8 border-t border-gray-100 pt-6">
+              <div className="flex items-center justify-between mb-8 border-t border-gray-100 pt-4">
                 <span className="text-xs font-bold text-gray-900 uppercase tracking-widest">Kuantitas</span>
                 <div className="flex items-center border border-gray-300 rounded-sm overflow-hidden">
                   <button 
