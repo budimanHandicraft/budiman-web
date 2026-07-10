@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
@@ -17,13 +17,30 @@ interface Produk {
   kategori: string;
 }
 
-export default function DetailProdukPage({ params }: { params: { id: string } }) {
+interface Varian {
+  id: string;
+  tipe_varian_1: string | null;
+  nilai_varian_1: string | null;
+  tipe_varian_2: string | null;
+  nilai_varian_2: string | null;
+  harga: number | null;
+  stok: number | null;
+}
+
+export default function DetailProdukPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const idProduk = resolvedParams.id;
+
   const [produk, setProduk] = useState<Produk | null>(null);
   const [produkLain, setProdukLain] = useState<Produk[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [gambarUtama, setGambarUtama] = useState('');
   const [activeTab, setActiveTab] = useState('Description');
+
+  const [varianList, setVarianList] = useState<Varian[]>([]);
+  const [selectedVarian, setSelectedVarian] = useState<Varian | null>(null);
+  const [kuantitas, setKuantitas] = useState(1);
   
   const router = useRouter();
   const supabase = createBrowserClient(
@@ -32,22 +49,30 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
   );
 
   useEffect(() => {
+    if (!idProduk) return;
     const fetchDetailProduk = async () => {
       const { data: produkData } = await supabase
         .from('produk')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', idProduk)
         .single();
 
       if (produkData) {
         setProduk(produkData);
         setGambarUtama(produkData.gambar_url?.[0] || ''); 
+        
+        const { data: varianData } = await supabase
+          .from('produk_varian')
+          .select('*')
+          .eq('produk_id', produkData.id);
+          
+        if (varianData) setVarianList(varianData);
       }
 
       const { data: rekomendasi } = await supabase
         .from('produk')
         .select('*')
-        .neq('id', params.id)
+        .neq('id', idProduk)
         .limit(3);
         
       if (rekomendasi) setProdukLain(rekomendasi);
@@ -56,23 +81,37 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
     };
 
     fetchDetailProduk();
-  }, [params.id]);
+  }, [idProduk]);
+
+  const hargaTampil = selectedVarian?.harga ?? produk?.harga ?? 0;
+  const stokTampil = selectedVarian?.stok ?? produk?.stok ?? 0;
+  const handleKuantitas = (type: 'plus' | 'min') => {
+    if (type === 'plus' && kuantitas < stokTampil) setKuantitas(prev => prev + 1);
+    if (type === 'min' && kuantitas > 1) setKuantitas(prev => prev - 1);
+  };
 
   const tambahKeKeranjang = (langsungCheckout = false) => {
     if (!produk) return;
+    if (varianList.length > 0 && !selectedVarian) {
+      alert('Silakan pilih varian produk terlebih dahulu.');
+      return;
+    }
+
     const keranjangLama = localStorage.getItem('keranjang_umkm');
     let keranjang = keranjangLama ? JSON.parse(keranjangLama) : [];
+    const cartItemId = selectedVarian ? selectedVarian.id : produk.id;
+    const indexProduk = keranjang.findIndex((item: any) => item.id === cartItemId);
     
-    const indexProduk = keranjang.findIndex((item: any) => item.id === produk.id);
     if (indexProduk > -1) {
-      keranjang[indexProduk].kuantitas += 1;
+      keranjang[indexProduk].kuantitas += kuantitas;
     } else {
       keranjang.push({
-        id: produk.id,
+        id: cartItemId,
         nama_produk: produk.nama_produk,
-        harga: produk.harga,
+        varian_nama: selectedVarian ? `${selectedVarian.nilai_varian_1 || ''} ${selectedVarian.nilai_varian_2 || ''}`.trim() : null,
+        harga: hargaTampil,
         gambar_url: produk.gambar_url,
-        kuantitas: 1
+        kuantitas: kuantitas
       });
     }
     
@@ -87,18 +126,17 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold">Memuat detail produk...</div>;
   if (!produk) return <div className="min-h-screen flex items-center justify-center font-bold">Produk tidak ditemukan.</div>;
+  
   const galeriAsli = produk.gambar_url || [];
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           <div className="lg:col-span-5 flex gap-4">
             <div className="flex flex-col gap-4 w-20 shrink-0 max-h-[500px] overflow-y-auto no-scrollbar">
               {galeriAsli.map((img, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => setGambarUtama(img)}
+                <button key={idx} onClick={() => setGambarUtama(img)}
                   className={`aspect-[3/4] relative rounded-sm overflow-hidden border-2 transition-all ${gambarUtama === img ? 'border-[#d97736]' : 'border-transparent hover:border-gray-300'}`}
                 >
                   <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
@@ -119,18 +157,71 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
             <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">{produk.nama_produk}</h1>
             <div className="flex items-center text-[#d97736] mb-4 text-sm gap-1">★★★★★</div>
 
-            <p className="text-xl font-bold text-gray-900 mb-6">Rp {produk.harga.toLocaleString('id-ID')}</p>
-            <p className="text-xs text-gray-500 leading-relaxed text-justify mb-8 line-clamp-4">{produk.deskripsi}</p>
+            <p className="text-xl font-bold text-[#d97736] mb-1">Rp {hargaTampil.toLocaleString('id-ID')}</p>
+            <p className="text-xs text-gray-500 font-medium tracking-wide mb-6">
+              Sisa Stok: <span className="text-gray-900">{stokTampil}</span>
+            </p>
+            <p className="text-xs text-black leading-relaxed text-justify mb-8 line-clamp-4">{produk.deskripsi}</p>
+
+            {varianList.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Pilih Varian</p>
+                <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1 pb-2">
+                  {varianList.map((varian) => (
+                    <button
+                      key={varian.id}
+                      onClick={() => {
+                        setSelectedVarian(varian);
+                        setKuantitas(1);
+                      }}
+                      className={`px-4 py-2 border rounded-sm text-xs font-bold uppercase transition-all ${
+                        selectedVarian?.id === varian.id ? 'bg-gray-900 border-gray-900 text-white shadow-md scale-95' : 'bg-white border-gray-300 text-gray-700 hover:border-gray-900'
+                      }`}>
+                      {varian.nilai_varian_1} {varian.nilai_varian_2 ? `- ${varian.nilai_varian_2}` : ''}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mb-8 border-t border-gray-100 pt-6">
+              <span className="text-xs font-bold text-gray-900 uppercase tracking-widest">Kuantitas</span>
+              <div className="flex items-center border border-gray-300 rounded-sm overflow-hidden">
+                <button 
+                  onClick={() => handleKuantitas('min')} 
+                  disabled={kuantitas <= 1}
+                  className="w-10 h-10 flex items-center justify-center bg-gray-50 text-black hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <div className="w-12 h-10 flex items-center justify-center font-bold text-sm text-black bg-white border-x border-gray-300">
+                  {kuantitas}
+                </div>
+                <button 
+                  onClick={() => handleKuantitas('plus')} 
+                  disabled={kuantitas >= stokTampil}
+                  className="w-10 h-10 flex items-center justify-center bg-gray-50 text-black hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-3 mb-8">
-              <button onClick={() => tambahKeKeranjang(false)}
-                className="w-full bg-[#f0f0f0] hover:bg-gray-200 text-gray-900 font-bold py-3 px-4 rounded-sm text-xs flex items-center justify-center gap-2 uppercase tracking-widest transition-colors cursor-pointer">
+              <button 
+                onClick={() => tambahKeKeranjang(false)}
+                disabled={stokTampil === 0 || (varianList.length > 0 && !selectedVarian)}
+                className="w-full bg-[#f0f0f0] hover:bg-gray-300 text-gray-900 font-bold py-3 px-4 rounded-sm text-xs flex items-center justify-center gap-2 uppercase tracking-widest transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                Add to Cart
+                {stokTampil === 0 ? 'Stok Habis' : 'Add to Cart'}
               </button>
-              <button onClick={() => tambahKeKeranjang(true)}
-                className="w-full border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-bold py-3 px-4 rounded-sm text-xs uppercase tracking-widest transition-colors cursor-pointer">
-                Buy Now
+              <button 
+                onClick={() => tambahKeKeranjang(true)}
+                disabled={stokTampil === 0 || (varianList.length > 0 && !selectedVarian)}
+                className="w-full border-2 hover:border-[#d97736] hover:bg-[#d97736] text-black hover:text-white font-bold py-3 px-4 rounded-sm text-xs uppercase tracking-widest transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {stokTampil === 0 ? 'Stok Habis' : 'Buy Now'}
               </button>
             </div>
 
@@ -152,16 +243,16 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
 
           <div className="lg:col-span-4 flex items-start">
             <div className="border border-gray-200 p-6 rounded-sm w-full">
-              <h3 className="font-serif font-bold text-lg mb-4">The Story Behind This Piece</h3>
+              <h3 className="font-serif font-bold text-lg text-black mb-4">The Story Behind This Piece</h3>
               <div className="flex gap-4 mb-4">
                 <div className="w-24 h-24 bg-[#e3e8de] rounded-sm shrink-0 relative overflow-hidden">
                    {produk.gambar_url?.[0] && (
                      <Image src={produk.gambar_url[0]} alt="Story" fill className="object-cover" />
                    )}
                 </div>
-                <p className="text-[10px] text-gray-500 leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p className="text-[10px] text-black leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
               </div>
-              <Link href="#" className="text-[#d97736] font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Discover Our Story <span>&rarr;</span></Link>
+              <Link href="/history" className="text-[#d97736] font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">Discover Our Story <span>&rarr;</span></Link>
             </div>
           </div>
         </div>
@@ -169,7 +260,7 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
           <div className="lg:col-span-4">
             <div className="bg-[#faf9f5] border border-[#e8e6dd] p-6 rounded-sm">
-              <h3 className="font-serif font-bold text-lg mb-6">Product Details</h3>
+              <h3 className="font-serif font-bold text-lg text-black mb-6">Product Details</h3>
               <div className="grid grid-cols-2 gap-y-4 text-xs">
                 <span className="text-gray-500">Material</span>
                 <span className="font-medium text-gray-900">Premium Teak Wood</span>
@@ -195,7 +286,7 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
           <div className="lg:col-span-8">
             <div className="flex gap-12 border-b border-gray-200 mb-6">
               {['Description', 'Reviews', 'Care Guide'].map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === tab ? 'text-[#d97736] border-b-2 border-[#d97736]' : 'text-gray-400 hover:text-gray-700'}`}>
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === tab ? 'text-black border-b-2 border-[#d97736]' : 'text-gray-400 hover:text-gray-700'}`}>
                   {tab}
                 </button>
               ))}
@@ -249,7 +340,7 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
       </div>
 
       <div className="bg-[#141414] py-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('/pattern-awan.png')] bg-cover bg-center pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[url('/awan.svg')] bg-[20%_0%] bg-cover bg-center pointer-events-none"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex justify-between items-end mb-10">
             <h2 className="text-3xl font-serif font-bold text-white">You May Also Like</h2>
@@ -262,7 +353,6 @@ export default function DetailProdukPage({ params }: { params: { id: string } })
             {produkLain.map((item) => (
               <Link href={`/katalog/${item.id}`} key={item.id} className="group">
                 <div className="aspect-[4/3] bg-[#e3e8de] rounded-sm mb-4 relative overflow-hidden">
-
                   {item.gambar_url?.[0] ? (
                     <Image src={item.gambar_url[0]} alt={item.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
