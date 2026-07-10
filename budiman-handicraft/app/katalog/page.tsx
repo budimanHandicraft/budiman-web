@@ -429,7 +429,7 @@ export default function KatalogPage() {
                   <button 
                     onClick={() => handleKuantitas('min')} 
                     disabled={kuantitas <= 1}
-                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
                   >
                     -
                   </button>
@@ -439,7 +439,7 @@ export default function KatalogPage() {
                   <button 
                     onClick={() => handleKuantitas('plus')} 
                     disabled={kuantitas >= stokTampil}
-                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
                   >
                     +
                   </button>
@@ -450,7 +450,7 @@ export default function KatalogPage() {
               <button 
                 onClick={konfirmasiKeranjang}
                 disabled={stokTampil === 0 || (varianList.length > 0 && !selectedVarian)}
-                className="w-full bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-3.5 px-4 rounded-sm text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-full bg-[#d97736] hover:bg-[#c2662b] text-white font-bold py-3.5 px-4 rounded-sm text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
               >
                 {stokTampil === 0 ? 'Stok Habis' : 'Konfirmasi Keranjang'}
               </button>
