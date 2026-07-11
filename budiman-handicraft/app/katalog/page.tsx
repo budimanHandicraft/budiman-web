@@ -184,7 +184,7 @@ export default function KatalogPage() {
           <div className="max-w-3xl">
             <h4 className="text-[#544f2d] font-bold text-[12px] tracking-[0.2em] uppercase mb-2">Premium Collections</h4>
             <h1 className="text-[48px] font-serif font-bold text-gray-900 mb-4">Budiman Handicraft Catalog</h1>
-            <p className="text-black text-[16px] leading-relaxed max-w-2xl text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p className="text-black text-[16px] leading-relaxed max-w-2xl text-justify">Jelajahi kurasi eksklusif mahakarya kami. Setiap goresan ukiran dan detail presisi merupakan dedikasi terhadap kelestarian seni budaya Sunda</p>
           </div>
           
           <div className="w-full md:w-auto">
@@ -280,7 +280,7 @@ export default function KatalogPage() {
               
               <div className="relative z-10">
                 <h3 className="text-xl font-serif font-bold text-gray-900 mb-3">Artisan Authenticity</h3>
-                <p className="text-gray-600 text-xs leading-relaxed text-justify mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+                <p className="text-gray-600 text-xs leading-relaxed text-justify mb-4">Bukan sekadar barang produksi massal. Setiap karya kami ukir oleh seniman lokal, menjadikannya unik, otentik, dan bernilai tinggi</p>
                 <Link href="#" className="text-[#d77723] font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-wider">Learn more <span>&rarr;</span></Link>
               </div>
             </div>
@@ -293,7 +293,7 @@ export default function KatalogPage() {
               <div className="relative z-10 max-w-lg">
                 <h4 className="text-[#ffdb81] font-bold text-xs tracking-[0.2em] uppercase mb-2">Our Heritage Story</h4>
                 <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-3">Preserving Sundanese Soul</h2>
-                <p className="text-white text-xs md:text-sm leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p className="text-white text-xs md:text-sm leading-relaxed text-justify">Kami tidak sekadar memahat material alam, kami merawat memori epik Nusantara. Rasakan kedalaman filosofi budi pekerti Sunda dalam setiap mahakarya yang lahir dari dedikasi dan tangan para artisan kebanggaan kami.</p>
               </div>
 
               <div className="relative z-10 shrink-0 w-full md:w-auto">
