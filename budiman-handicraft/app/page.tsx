@@ -1,7 +1,55 @@
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  const router = useRouter();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    const cekStatusLogin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+        
+        const { data: profil } = await supabase
+          .from('profil_pelanggan')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profil?.role === 'admin') {
+          setIsAdmin(true);
+        }
+      }
+      
+      setIsCheckingAuth(false);
+    };
+
+    cekStatusLogin();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    const konfirmasi = confirm('Apakah Anda yakin ingin keluar?');
+    if (!konfirmasi) return;
+
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    router.refresh(); 
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <section className="-mt-12 relative w-full h-[600px] md:h-[1000px] flex items-center overflow-hidden">
@@ -166,7 +214,33 @@ export default function Home() {
           <h2 className="text-[52px] font-serif font-bold text-white mb-4">Join The Heritage Circle</h2>
           <p className="text-white text-[20px] mb-10 max-w-xl mx-auto">Terhubunglah dengan perjalanan kami. Bergabunglah dalam ruang apresiasi seni, di mana setiap kabar terbaru mengenai karya baru dan proses kreatif di balik setiap guratan karya kami akan menjadi bagian dari percakapan seni Anda.</p>
 
-          <button type="submit" className="bg-[#d77723] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md">Login</button>
+          {/* <button type="submit" className="bg-[#d77723] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md">Login</button> */}
+          <div className="mt-8 flex flex-col md:flex-row gap-4 items-center justify-center">
+        {isCheckingAuth ? (
+          <div className="bg-gray-300 text-gray-400 font-bold py-4 px-8 uppercase tracking-widest text-[24px] rounded-md inline-block animate-pulse">
+            Memeriksa...
+          </div>
+        ) : isLoggedIn ? (
+          <>
+            {isAdmin ? (
+              <Link href="/admin" className="bg-transparent hover:bg-[#d77723] border-2 border-[#d77723] text-[#d77723] hover:text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md inline-block text-center shadow-lg">
+                Dashboard Admin
+              </Link>
+            ) : (
+              <Link href="/profil" className="bg-transparent hover:bg-[#d77723] border-2 border-[#d77723] text-[#d77723] hover:text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md inline-block text-center shadow-lg">
+                Profil Saya
+              </Link>
+            )}
+            <button onClick={handleLogout} className="bg-transparent border-2 border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-3.5 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md inline-block text-center shadow-lg cursor-pointer">
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link href="/login" className="bg-[#d77723] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md inline-block text-center shadow-lg">
+            Login
+          </Link>
+        )}
+      </div>
         </div>
       </section>
       
