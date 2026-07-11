@@ -61,18 +61,14 @@ export default function HistoryPage() {
       <section className="relative w-full py-24 md:py-32 px-6 flex flex-col items-center justify-center text-center bg-[#141414] overflow-hidden mt-12">
         <div className="absolute inset-0 bg-[url('/awan.svg')] bg-cover opacity-80 pointer-events-none"></div>
         <div className="relative z-10 max-w-6xl flex flex-col items-center">
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-10">
-            Menghidupkan Budaya di Keseharian
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-10">Menghidupkan Budaya di Keseharian</h2>
           
           <div className="text-white text-[12px] md:text-[20px] leading-relaxed space-y-6 font-light tracking-widest">
             <p>Kami percaya bahwa pelestarian budaya tidak harus selalu dilakukan melalui panggung pertunjukan atau ruang-ruang budaya. Budaya juga dapat hidup melalui karya yang digunakan dalam kehidupan sehari-hari, dikenakan dengan bangga, diberikan sebagai buah tangan, hingga dipajang sebagai pengingat akan kekayaan warisan yang kita miliki.</p>
             <p>Melalui Budiman Handicraft, kami ingin memperkenalkan budaya Sunda kepada lebih banyak orang. Mulai dari generasi muda, masyarakat di berbagai daerah Indonesia, hingga pasar mancanegara. Karena kami percaya, budaya akan terus hidup ketika ada yang mengenalnya, mencintainya, dan memilih untuk melestarikannya.</p>
           </div>
           
-          <p className="text-[#d77723] font-serif italic text-[16px] md:text-[24px] mt-12">
-            "Bagi kami, pelestarian budaya selalu dimulai dari diri sendiri. Sebab, jika bukan kita, siapa lagi?"
-          </p>
+          <p className="text-[#d77723] font-serif italic text-[16px] md:text-[24px] mt-12">"Bagi kami, pelestarian budaya selalu dimulai dari diri sendiri. Sebab, jika bukan kita, siapa lagi?"</p>
         </div>
       </section>
 

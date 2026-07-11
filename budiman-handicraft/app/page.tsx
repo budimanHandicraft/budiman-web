@@ -14,16 +14,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent"></div>
         </div>
 
-        <div className="relative z-10 w-full pl-16">
-          <h1 className="text-[48px] text-[#df9e3d] font-bold">Legacy since 1999</h1>
+        <div className="relative z-20 w-full pl-16">
+          <div className="flex items-center gap-4">
+            <div className="w-28 h-0.5 bg-[#d77723]"></div>
+            <h1 className="text-[48px] text-[#df9e3d] font-bold">Legacy since 2016</h1>
+          </div>
 
           <p className="my-4 max-w-md text-[28px] text-white font-bold">Melestarikan Budaya Sunda <span className="text-[#df9e3d]">Melalui</span> <span className="italic">Karya Tangan</span></p>
-          <p className="max-w-xl text-white text-[16px]">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</p>
+          <p className="max-w-xl text-white text-[16px]">Dari tangan para seniman, koleksi kami dirancang untuk mereka yang menghargai perjalanan di balik setiap guratan pahat. Temukan wayang serta kerajinan tradisional yang melampaui sekadar dekorasi, menjadi warisan yang abadi.</p>
 
-          <button className="mt-8 px-6 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold">Explore Collections</button>
+          <Link href="/katalog" className="inline-block relative mt-8 px-6 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold cursor-pointer">Explore Collections</Link>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[2px]">
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[2px] pointer-events-none">
           <svg className="relative block w-full h-[80px] md:h-[400px] transform -scale-x-100" xmlns="http://www.w3.org/2000/svg"
                viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path
@@ -44,7 +47,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Craftmanship</h3>
-              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Dikerjakan secara manual dengan teliti. Setiap detail ukiran, perakitan, hingga pengecatan diperhatikan dengan saksama oleh pengrajin kami.</p>
             </div>
 
             <div>
@@ -54,7 +57,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Philosophy</h3>
-              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Bukan sekadar hiasan biasa. Desain karya kami terinspirasi dari karakter pewayangan dan kearifan lokal Nusantara yang sarat makna.</p>
             </div>
 
             <div>
@@ -64,7 +67,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Longevity</h3>
-              <p className="text-black text-[16px] leading-relaxed text-justify">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Dibuat menggunakan bahan baku kayu dan material berkualitas tinggi agar produk tetap kokoh, awet, dan tidak mudah rusak dimakan waktu.</p>
             </div>
           </div>
         </div>
@@ -82,7 +85,7 @@ export default function Home() {
           <div className="mb-8">
             <h4 className="text-[#df9e3d] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
             <h2 className="text-[28px] font-bold text-white mb-4 leading-none">The Artisan Masterpiece</h2>
-            <p className="text-white text-[18px] max-w-3xl">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p className="text-white text-[18px] max-w-3xl">Koleksi yang menjadi standar kualitas pilihan pelanggan kami. Inilah karya-karya maestro yang memiliki kedudukan tersendiri dalam ruang, mencerminkan apresiasi tinggi terhadap tradisi yang tidak lekang oleh waktu</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-32 px-24">
@@ -125,31 +128,27 @@ export default function Home() {
             </div>
 
             <div className="w-full lg:w-1/2">
-              <h4 className="text-[#df9e3d] font-bold text-[28px] tracking-[0.2em] uppercase mb-3">Legacy Since 1999</h4>
-              <h2 className="text-[52px] font-bold text-black mb-8">Our legacy of Craft</h2>
+              <h4 className="text-[#df9e3d] font-bold text-[28px] tracking-[0.2em] uppercase mb-3">Legacy Since 2016</h4>
+              <h2 className="text-[52px] font-bold text-black">Dedikasi di Balik Guratan</h2>
               <div className="space-y-6 text-black text-[24px] leading-tight mb-10 text-justify">
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p>Dimulai pada tahun 2016, Budiman Handicraft lahir dari keinginan sederhana untuk menjaga keterampilan kerajinan tangan lokal tetap eksis. Kami bekerja sama dengan seniman dan pengrajin lokal berpengalaman untuk menciptakan karya yang bisa dibanggakan.</p>
+                <p>Setiap produk yang kami hasilkan menggabungkan teknik pertukangan tradisional dengan standar kualitas masa kini. Mulai dari pemilihan kayu hingga tahap penyelesaian, kami memastikan setiap pesanan layak untuk menjadi koleksi pribadi Anda.</p>
               </div>
               <hr className="border-gray-400 mb-8"></hr>
-              <div className="grid grid-cols-3 gap-16 mb-8 text-center lg:text-left">
+              <div className="flex justify-center gap-32 mb-8 text-center lg:text-left">
                 <div>
-                  <div className="text-[52px] text-black mb-1">25<span className="text-2xl">+</span></div>
+                  <div className="text-[52px] text-black mb-1">10<span className="text-2xl">+</span></div>
                   <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Years</div>
                 </div>
                 <div>
-                  <div className="text-[52px] text-black mb-1">1,5 K</div>
+                  <div className="text-[52px] text-black mb-1">200<span className="text-2xl">+</span></div>
                   <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Works</div>
-                </div>
-                <div>
-                  <div className="text-[52px] text-black mb-1">52</div>
-                  <div className="text-[20px] font-bold text-[#df9e3d] uppercase tracking-wider">Artisans</div>
                 </div>
               </div>
 
-              <Link href="/#" className="inline-flex items-center gap-2 text-[24px] font-bold text-black hover:text-[#d97736] transition-colors uppercase tracking-wider">
+              <Link href="/artisan" className="text-[#d97736] font-bold text-[20px] uppercase tracking-wider hover:underline flex items-center gap-1">
                 Meet Our Artisans <span>&rarr;</span>
-              </Link>
+               </Link>
             </div>
           </div>
         </div>
@@ -165,9 +164,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 w-full mx-auto px-4 text-center">
           <h2 className="text-[52px] font-serif font-bold text-white mb-4">Join The Heritage Circle</h2>
-          <p className="text-white text-[20px] mb-10 max-w-xl mx-auto">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
+          <p className="text-white text-[20px] mb-10 max-w-xl mx-auto">Terhubunglah dengan perjalanan kami. Bergabunglah dalam ruang apresiasi seni, di mana setiap kabar terbaru mengenai karya baru dan proses kreatif di balik setiap guratan karya kami akan menjadi bagian dari percakapan seni Anda.</p>
 
           <button type="submit" className="bg-[#d77723] hover:bg-[#c2662b] text-white font-bold py-4 px-8 uppercase tracking-widest text-[24px] transition-colors rounded-md">Login</button>
         </div>
