@@ -281,7 +281,7 @@ export default function KatalogPage() {
               <div className="relative z-10">
                 <h3 className="text-xl font-serif font-bold text-gray-900 mb-3">Artisan Authenticity</h3>
                 <p className="text-gray-600 text-xs leading-relaxed text-justify mb-4">Bukan sekadar barang produksi massal. Setiap karya kami ukir oleh seniman lokal, menjadikannya unik, otentik, dan bernilai tinggi</p>
-                <Link href="#" className="text-[#d77723] font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-wider">Learn more <span>&rarr;</span></Link>
+                <Link href="/artisan" className="text-[#d77723] font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-wider">Learn more <span>&rarr;</span></Link>
               </div>
             </div>
           </div>
