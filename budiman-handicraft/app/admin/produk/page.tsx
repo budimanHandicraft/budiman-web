@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import imageCompression from 'browser-image-compression';
+import { createBrowserClient } from '@supabase/ssr';
 
 interface Produk {
   id: string;
@@ -29,6 +29,11 @@ interface Varian {
 }
 
 export default function AdminProduk() {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   const [activeTab, setActiveTab] = useState<'daftar' | 'tambah'>('daftar');
   const [produkList, setProdukList] = useState<Produk[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -473,7 +478,6 @@ export default function AdminProduk() {
 
             </div>
 
-            {/* ===== TOMBOL EKSEKUSI BATCH ===== */}
             <div className="flex gap-3 mt-8 pt-4 border-t border-gray-200">
               <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition cursor-pointer">
                 Batal
