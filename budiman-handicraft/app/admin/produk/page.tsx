@@ -16,7 +16,6 @@ interface Produk {
   kategori: string;
 }
 
-// ===== INTERFACE VARIAN BARU =====
 interface Varian {
   id: string;
   produk_id: string;
@@ -26,7 +25,7 @@ interface Varian {
   nilai_varian_2: string | null;
   harga: number | string | null;
   stok: number | string | null;
-  isNew?: boolean; // Penanda khusus untuk UI frontend
+  isNew?: boolean;
 }
 
 export default function AdminProduk() {
@@ -50,7 +49,6 @@ export default function AdminProduk() {
   const [editData, setEditData] = useState<Produk | null>(null);
   const [editFileGambar, setEditFileGambar] = useState<FileList | null>(null);
 
-  // ===== STATE KHUSUS VARIAN DI MODAL EDIT =====
   const [varianList, setVarianList] = useState<Varian[]>([]);
   const [isLoadingVarian, setIsLoadingVarian] = useState(false);
 
@@ -75,13 +73,14 @@ export default function AdminProduk() {
       const file = files[i];
       const compressedBlob = await imageCompression(file, options);
       const compressedFile = new File([compressedBlob], `compressed_${Date.now()}_${i}.webp`, { type: 'image/webp' });
-      const namaFileUnik = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
-      
+      const namaFileUnik = `produk/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
       const { error: storageError } = await supabase.storage.from('katalog-produk').upload(namaFileUnik, compressedFile);
       if (storageError) throw storageError;
       
-      const { data: publicUrlData } = supabase.storage.from('katalog-produk').getPublicUrl(namaFileUnik);
-      urls.push(publicUrlData.publicUrl);
+      const { data } = supabase.storage.from('katalog-produk').getPublicUrl(namaFileUnik);
+      if (data?.publicUrl) {
+        urls.push(data.publicUrl);
+      }
     }
     return urls;
   };
@@ -93,18 +92,19 @@ export default function AdminProduk() {
     setIsLoading(true);
     try {
       const urlGambarGabungan = await uploadMultipleImages(fileGambar);
+      const payloadData = {
+        nama_produk: nama,
+        kategori: kategori || 'Umum',
+        deskripsi: deskripsi,
+        harga: parseInt(harga),
+        berat_gram: parseInt(berat),
+        stok: parseInt(stok),
+        gambar_url: urlGambarGabungan,
+      };
 
       const { error: dbError } = await supabase
         .from('produk')
-        .insert([{
-          nama_produk: nama,
-          kategori: kategori || 'Umum',
-          deskripsi: deskripsi,
-          harga: parseInt(harga),
-          berat_gram: parseInt(berat),
-          stok: parseInt(stok),
-          gambar_url: urlGambarGabungan,
-        }]);
+        .insert([payloadData]);
 
       if (dbError) throw dbError;
       alert('Produk berhasil ditambahkan!');
@@ -119,11 +119,10 @@ export default function AdminProduk() {
     }
   };
 
-  // ===== LOGIKA MEMBUKA MODAL & MENARIK DATA VARIAN =====
   const bukaModalEdit = async (produk: Produk) => {
     setEditData(produk);
     setEditFileGambar(null);
-    setVarianList([]); // Reset dulu
+    setVarianList([]);
     setIsEditModalOpen(true);
     
     setIsLoadingVarian(true);
@@ -137,11 +136,10 @@ export default function AdminProduk() {
     setIsLoadingVarian(false);
   };
 
-  // ===== FUNGSI KELOLA STATE VARIAN LOKAL =====
   const tambahVarianKosong = () => {
     if (!editData) return;
     setVarianList([...varianList, {
-      id: `temp-${Date.now()}`, // ID sementara untuk rendering React
+      id: `temp-${Date.now()}`,
       produk_id: editData.id,
       tipe_varian_1: '',
       nilai_varian_1: '',
@@ -149,7 +147,7 @@ export default function AdminProduk() {
       nilai_varian_2: null,
       harga: '',
       stok: '',
-      isNew: true // Tandai bahwa ini varian baru yang belum masuk DB
+      isNew: true
     }]);
   };
 
@@ -162,62 +160,52 @@ export default function AdminProduk() {
   const hapusLocalVarian = async (index: number, id: string, isNew?: boolean) => {
     const konfirmasi = confirm('Yakin hapus varian ini?');
     if (!konfirmasi) return;
-
-    // Jika varian sudah ada di DB (bukan varian baru dibikin), hapus dari Supabase langsung
     if (!isNew) {
       await supabase.from('produk_varian').delete().eq('id', id);
     }
     
-    // Hapus dari tampilan layar
     const newList = [...varianList];
     newList.splice(index, 1);
     setVarianList(newList);
   };
 
-  // ===== LOGIKA UPDATE PRODUK INDUK + BATCH UPSERT VARIAN =====
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editData) return;
     
     setIsLoading(true);
     try {
-      // 1. Urus Gambar & Data Induk
-      let finalImageUrl: string[] = editData.gambar_url;
+      let finalImageUrl: string[] = editData.gambar_url || []; 
       if (editFileGambar && editFileGambar.length > 0) {
         finalImageUrl = await uploadMultipleImages(editFileGambar);
       }
 
+      const payloadUpdate = {
+        nama_produk: editData.nama_produk,
+        kategori: editData.kategori,
+        deskripsi: editData.deskripsi,
+        harga: editData.harga,
+        berat_gram: editData.berat_gram,
+        stok: editData.stok,
+        gambar_url: finalImageUrl,
+      };
+
       const { error: dbError } = await supabase
         .from('produk')
-        .update({
-          nama_produk: editData.nama_produk,
-          kategori: editData.kategori,
-          deskripsi: editData.deskripsi,
-          harga: editData.harga,
-          berat_gram: editData.berat_gram,
-          stok: editData.stok,
-          gambar_url: finalImageUrl,
-        })
+        .update(payloadUpdate)
         .eq('id', editData.id);
 
       if (dbError) throw dbError;
-
-      // 2. Urus Sinkronisasi Data Varian (Batch Upsert)
       if (varianList.length > 0) {
         const variantsToSave = varianList.map(v => {
           const payload: any = { ...v };
-          
-          // Hapus ID sementara jika ini varian baru agar DB membuatkan UUID asli
           if (payload.isNew) {
              delete payload.id;
              delete payload.isNew;
           }
           
-          // Konversi string kosong menjadi NULL sesuai Skenario 3
           payload.harga = (payload.harga === '' || payload.harga === null || isNaN(Number(payload.harga))) ? null : parseInt(payload.harga);
           payload.stok = (payload.stok === '' || payload.stok === null || isNaN(Number(payload.stok))) ? null : parseInt(payload.stok);
-          
-          // Konversi string kosong tipe/nilai menjadi NULL
           payload.tipe_varian_1 = payload.tipe_varian_1 === '' ? null : payload.tipe_varian_1;
           payload.nilai_varian_1 = payload.nilai_varian_1 === '' ? null : payload.nilai_varian_1;
 
@@ -241,8 +229,6 @@ export default function AdminProduk() {
   const handleDelete = async (id: string, gambarUrl: string[]) => {
     const confirmDelete = confirm('Yakin ingin menghapus produk ini beserta seluruh variannya?');
     if (!confirmDelete) return;
-    
-    // Hapus foto di storage
     for (const url of gambarUrl) {
       const namaFile = url.split('/').pop();
       if (namaFile) {
@@ -250,7 +236,6 @@ export default function AdminProduk() {
       }
     }
 
-    // Supabase otomatis menghapus variannya jika ada relasi CASCADE (atau kita hapus manual produknya)
     await supabase.from('produk').delete().eq('id', id);
     alert('Produk berhasil dihapus!');
     fetchProduk();
