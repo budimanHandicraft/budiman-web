@@ -1,205 +1,244 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-interface Transaksi {
-  id: string;
-  created_at: string;
-  total_belanja: number;
-  status_pembayaran: string;
-  status_pengiriman: string;
-  nama_pembeli: string;
-}
-
-interface Produk {
-  id: string;
-  nama_produk: string;
-  stok: number;
-  gambar_url: string;
-}
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const [rekap, setRekap] = useState({ totalTransaksi: 0, pesananDikemas: 0, totalPendapatan: 0 });
+  const [pesananTerbaru, setPesananTerbaru] = useState<any[]>([]);
+  const [stokMenipis, setStokMenipis] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({ pendapatan: 0, totalPesanan: 0, perluDikemas: 0, produkAktif: 0 });
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [lowStock, setLowStock] = useState<Produk[]>([]);
-  const [recentOrders, setRecentOrders] = useState<Transaksi[]>([]);
+  const formatRupiah = (angka: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+  };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
 
-  const fetchDashboardData = async () => {
-    setIsLoading(true);
+      const { data: semuaTransaksi } = await supabase
+        .from('transaksi')
+        .select('total_belanja, status_pengiriman');
 
-    try {
-      const [transaksiRes, produkRes] = await Promise.all([
-        supabase.from('transaksi').select('*').order('created_at', { ascending: false }),
-        supabase.from('produk').select('*').eq('is_active', true)
-      ]);
+      if (semuaTransaksi) {
+        const trxSelesai = semuaTransaksi.filter(t => t.status_pengiriman?.toLowerCase() === 'selesai');
+        const totalUangMasuk = trxSelesai.reduce((sum, t) => sum + (t.total_belanja || 0), 0);
+        const trxDikemas = semuaTransaksi.filter(t => t.status_pengiriman?.toLowerCase() === 'dikemas');
 
-      const semuaTransaksi = transaksiRes.data as Transaksi[] || [];
-      const semuaProduk = produkRes.data as Produk[] || [];
-      let totalPendapatan = 0;
-      let perluDikemas = 0;
-      
-      semuaTransaksi.forEach(tx => {
-        if (tx.status_pembayaran === 'PAID') {
-          totalPendapatan += Number(tx.total_belanja);
-        }
-        if (tx.status_pembayaran === 'PAID' && tx.status_pengiriman === 'DIKEMAS') {
-          perluDikemas += 1;
-        }
-      });
-
-      setStats({
-        pendapatan: totalPendapatan,
-        totalPesanan: semuaTransaksi.length,
-        perluDikemas: perluDikemas,
-        produkAktif: semuaProduk.length
-      });
-
-      const groupedData: Record<string, number> = {};
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateString = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-        groupedData[dateString] = 0;
+        setRekap({
+          totalTransaksi: trxSelesai.length,
+          pesananDikemas: trxDikemas.length,
+          totalPendapatan: totalUangMasuk
+        });
       }
 
-      semuaTransaksi.forEach(tx => {
-        if (tx.status_pembayaran === 'PAID') {
-          const txDate = new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-          if (groupedData[txDate] !== undefined) {
-            groupedData[txDate] += Number(tx.total_belanja);
-          }
-        }
-      });
+      const { data: terbaru } = await supabase
+        .from('transaksi')
+        .select(`
+          order_id, 
+          created_at, 
+          total_belanja, 
+          ongkos_kirim, 
+          status_pengiriman,
+          detail_transaksi (
+            produk (nama_produk)
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-      const finalChartData = Object.keys(groupedData).map(key => ({
-        tanggal: key,
-        pendapatan: groupedData[key]
-      }));
-      setChartData(finalChartData);
+      if (terbaru) {
+        const formattedTerbaru = terbaru.map((trx: any) => {
+          const namaProduk = trx.detail_transaksi?.[0]?.produk?.nama_produk || 'Produk tidak diketahui';
+          const tambahanProduk = trx.detail_transaksi?.length > 1 ? ` (+${trx.detail_transaksi.length - 1} lainnya)` : '';
 
-      const produkKritis = semuaProduk.filter(p => p.stok < 5).sort((a, b) => a.stok - b.stok);
-      setLowStock(produkKritis);
-      setRecentOrders(semuaTransaksi.slice(0, 5));
+          return {
+            id: trx.order_id,
+            tanggal: new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+            produk: `${namaProduk}${tambahanProduk}`,
+            tagihan: formatRupiah((trx.total_belanja || 0) + (trx.ongkos_kirim || 0)),
+            status: trx.status_pengiriman || 'Pending'
+          };
+        });
+        setPesananTerbaru(formattedTerbaru);
+      }
 
-    } catch (error) {
-      console.error("Gagal memuat data dasbor", error);
-    } finally {
+      const { data: stok } = await supabase
+        .from('produk')
+        .select('nama_produk, stok')
+        .order('stok', { ascending: true })
+        .limit(5);
+
+      if (stok) setStokMenipis(stok);
+
       setIsLoading(false);
+    };
+
+    fetchDashboardData();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    const confirmLogout = confirm('Yakin ingin keluar dari halaman Admin?');
+    if (confirmLogout) {
+      await supabase.auth.signOut();
+      router.push('/login');
     }
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Memuat Dasbor...</div>;
-  }
-
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">Beranda Admin</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-1">Total Pendapatan (Lunas)</div>
-          <div className="text-2xl font-bold text-green-600">
-            Rp {stats.pendapatan.toLocaleString('id-ID')}
+    <div className="flex min-h-screen bg-[#fcfaf5] font-sans overflow-hidden">
+      <aside className="w-64 bg-[#141414] text-white flex flex-col relative z-20 shadow-2xl">
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-[url('/awan.svg')] bg-cover opacity-80 pointer-events-none"></div>
+        
+        <div className="p-8 border-b border-gray-800 flex items-center gap-3 relative z-10">
+          <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
           </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-1">Total Pesanan</div>
-          <div className="text-2xl font-bold text-gray-800">{stats.totalPesanan} Pesanan</div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-red-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
-          <div className="text-sm font-medium text-red-500 mb-1">Perlu Dikemas</div>
-          <div className="text-2xl font-bold text-gray-800">{stats.perluDikemas} Paket</div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-1">Katalog Aktif</div>
-          <div className="text-2xl font-bold text-blue-600">{stats.produkAktif} Produk</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold mb-4 text-gray-800">Grafik Pendapatan (7 Hari Terakhir)</h2>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                <XAxis dataKey="tanggal" tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(value) => `Rp ${Number(value).toLocaleString('id-ID')}`} />
-                <Bar dataKey="pendapatan" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div>
+            <p className="text-xs text-gray-400">Selamat datang,</p>
+            <p className="text-sm font-bold">Admin Budiman</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold mb-4 text-gray-800 flex justify-between items-center">
-            Stok Kritis
-            <span className="text-xs bg-red-100 text-red-600 py-1 px-2 rounded-full font-bold">
-              {lowStock.length} Item
-            </span>
-          </h2>
-          {lowStock.length === 0 ? (
-            <div className="text-center text-gray-500 py-8 text-sm">Semua stok produk aman!</div>
+        <nav className="flex-1 p-6 space-y-4 relative z-10">
+          <Link href="/admin/dashboard" className="flex items-center gap-3 text-[#df9e3d] font-bold text-sm tracking-wider hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+            DASHBOARD
+          </Link>
+          <Link href="/admin/transaksi" className="flex items-center gap-3 text-gray-400 font-bold text-sm tracking-wider hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"></path></svg>
+            HISTORI TRANSAKSI
+          </Link>
+          <Link href="/admin/produk" className="flex items-center gap-3 text-gray-400 font-bold text-sm tracking-wider hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clipRule="evenodd"></path></svg>
+            KELOLA PRODUK
+          </Link>
+        </nav>
+
+        <div className="p-6 relative z-10">
+          <button onClick={handleLogout}
+            className="flex items-center gap-3 text-gray-300 font-bold text-sm tracking-widest uppercase border border-gray-600 rounded px-4 py-2 hover:bg-red-600 hover:border-red-600 hover:text-white transition-all w-full justify-center"
+          >
+            <svg className="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            LOG OUT
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-8 md:p-12 relative overflow-y-auto">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[url('/awan.svg')] bg-cover opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4"></div>
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <h1 className="text-3xl font-serif font-bold text-black mb-8">Rekapitulasi Penjualan</h1>
+
+          {isLoading ? (
+            <div className="w-full h-32 flex items-center justify-center font-bold text-[#df9e3d] animate-pulse">Memuat Data Rekapitulasi...</div>
           ) : (
-            <div className="space-y-4">
-              {lowStock.map(produk => (
-                <div key={produk.id} className="flex items-center space-x-3 border-b pb-3 last:border-0 last:pb-0">
-                  <img src={produk.gambar_url} alt={produk.nama_produk} className="w-12 h-12 rounded object-cover border" />
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm line-clamp-1">{produk.nama_produk}</div>
-                    <div className="text-xs text-red-500 font-bold mt-1">Sisa {produk.stok} pcs di gudang</div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="bg-[#df9e3d] rounded-md p-6 shadow-md text-black">
+                  <h3 className="font-bold text-lg mb-2">Total Transaksi Selesai</h3>
+                  <p className="text-3xl font-bold text-white"><span className="text-4xl">{rekap.totalTransaksi}</span> <span className="text-xl">Transaksi</span></p>
+                </div>
+                
+                <div className="bg-[#df9e3d] rounded-md p-6 shadow-md text-black">
+                  <h3 className="font-bold text-lg mb-2">Pesanan Sedang Dikemas</h3>
+                  <p className="text-3xl font-bold text-white"><span className="text-4xl">{rekap.pesananDikemas}</span> <span className="text-xl">Pesanan</span></p>
+                </div>
+                
+                <div className="bg-[#df9e3d] rounded-md p-6 shadow-md text-black overflow-hidden whitespace-nowrap text-ellipsis">
+                  <h3 className="font-bold text-lg mb-2">Total Pendapatan</h3>
+                  <p className="text-2xl lg:text-3xl font-bold text-white">{formatRupiah(rekap.totalPendapatan)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                <div className="lg:col-span-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-serif font-bold text-black">5 Pesanan Terbaru</h3>
+                    <Link href="/admin/histori" className="bg-[#df9e3d] text-black text-xs font-bold px-3 py-1 rounded-full hover:bg-opacity-80 transition-opacity">Selengkapnya</Link>
+                  </div>
+                  
+                  <div className="bg-[#fcebaf] rounded-md overflow-hidden shadow-sm border border-[#df9e3d]">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-[#df9e3d] text-black font-bold">
+                        <tr>
+                          <th className="px-4 py-3">Tanggal</th>
+                          <th className="px-4 py-3">Order ID</th>
+                          <th className="px-4 py-3">Produk</th>
+                          <th className="px-4 py-3">Total Tagihan</th>
+                          <th className="px-4 py-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pesananTerbaru.length === 0 ? (
+                          <tr><td colSpan={5} className="text-center py-4 text-black">Belum ada pesanan</td></tr>
+                        ) : pesananTerbaru.map((order, idx) => (
+                          <tr key={idx} className="border-b border-[#ebd28a] text-black font-medium hover:bg-[#fae498]">
+                            <td className="px-4 py-3">{order.tanggal}</td>
+                            <td className="px-4 py-3">{order.id}</td>
+                            <td className="px-4 py-3">{order.produk}</td>
+                            <td className="px-4 py-3">{order.tagihan}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-sm ${order.status.toLowerCase() === 'selesai' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}`}>
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
 
-      <div className="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold mb-4 text-gray-800">5 Pesanan Terbaru</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50 text-sm text-gray-500">
-                <th className="p-3">Tanggal</th>
-                <th className="p-3">Pembeli</th>
-                <th className="p-3">Total Tagihan</th>
-                <th className="p-3">Status Bayar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.length === 0 ? (
-                <tr><td colSpan={4} className="text-center p-4 text-sm text-gray-500">Belum ada transaksi.</td></tr>
-              ) : (
-                recentOrders.map(tx => (
-                  <tr key={tx.id} className="border-b last:border-0 hover:bg-gray-50 text-sm">
-                    <td className="p-3">{new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                    <td className="p-3 font-medium">{tx.nama_pembeli}</td>
-                    <td className="p-3">Rp {tx.total_belanja.toLocaleString('id-ID')}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        tx.status_pembayaran === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {tx.status_pembayaran}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                <div className="lg:col-span-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-serif font-bold text-black">Pendapatan Bulanan</h3>
+                    <button className="text-[#df9e3d] hover:text-black font-bold text-xs underline">Bulan Sebelumnya</button>
+                  </div>
+                  
+                  <div className="bg-[#fcebaf] rounded-md p-6 h-[250px] shadow-sm border border-[#df9e3d] flex flex-col justify-end relative">
+                    <div className="absolute left-6 top-6 bottom-10 flex flex-col justify-between text-[10px] text-gray-600 font-bold">
+                      <span>80</span><span>60</span><span>40</span><span>20</span><span>0</span>
+                    </div>
+                    <div className="ml-6 h-[80%] flex items-end justify-between gap-2 border-l border-b border-gray-400 pb-1 px-2">
+                      <div className="w-full bg-[#4285F4] h-[60%] rounded-t-sm" title="Juli"></div>
+                      <div className="w-full bg-[#A87FFB] h-[45%] rounded-t-sm" title="Agustus"></div>
+                      <div className="w-full bg-[#1A73E8] h-[80%] rounded-t-sm" title="September"></div>
+                      <div className="w-full bg-[#EA4335] h-[30%] rounded-t-sm" title="Oktober"></div>
+                    </div>
+                    <div className="ml-6 flex justify-between mt-2 text-[10px] text-black font-bold px-2">
+                      <span>Jul</span><span>Agu</span><span>Sep</span><span>Okt</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full lg:w-1/2">
+                <h3 className="text-2xl font-serif font-bold text-black mb-4">Stok Barang Menipis</h3>
+                <div className="bg-[#fcebaf] rounded-md p-4 shadow-sm border border-[#df9e3d]">
+                  <ul className="divide-y divide-[#ebd28a]">
+                    {stokMenipis.map((item, idx) => (
+                      <li key={idx} className="py-3 flex justify-between items-center">
+                        <span className="font-bold text-black text-sm">{item.nama_produk}</span>
+                        <span className={`font-bold text-xs px-2 py-1 rounded-sm ${item.stok === 0 ? 'bg-red-200 text-red-700' : 'bg-orange-100 text-orange-700'}`}>Sisa {item.stok}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
-      </div>
+      </main>
     </div>
   );
 }
