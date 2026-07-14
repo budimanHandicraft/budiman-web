@@ -95,10 +95,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#fcfaf5] font-sans overflow-hidden">
-      <aside className="w-64 bg-[#141414] text-white flex flex-col relative z-20 shadow-2xl">
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-[url('/awan.svg')] bg-cover opacity-80 pointer-events-none"></div>
+      <aside className="w-64 bg-[#141414] text-white flex flex-col relative z-20 shadow-2xl overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/awan.svg')] scale-200 bg-[length:100%_auto] bg-top bg-repeat-y opacity-80 pointer-events-none"></div>
         
-        <div className="p-8 border-b border-gray-800 flex items-center gap-3 relative z-10">
+        <div className="p-8 flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
           </div>
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
       </aside>
 
       <main className="flex-1 p-8 md:p-12 relative overflow-y-auto">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[url('/awan.svg')] bg-cover opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4"></div>
+        <div className="absolute top-24 right-20 w-[500px] h-[300px] bg-[url('/awanKuning.svg')] bg-cover opacity-40 pointer-events-none transform"></div>
         <div className="relative z-10 max-w-6xl mx-auto">
           <h1 className="text-3xl font-serif font-bold text-black mb-8">Rekapitulasi Penjualan</h1>
 
