@@ -94,7 +94,7 @@ export default function AdminDashboard() {
   };
 
   return (
-      <main className="flex-1 p-8 md:p-12 relative overflow-y-auto">
+      <main className="w-full mt-2 p-8 md:p-12 relative">
         <div className="absolute top-24 right-20 w-[500px] h-[300px] bg-[url('/awanKuning.svg')] bg-cover opacity-40 pointer-events-none transform"></div>
         <div className="relative z-10 max-w-6xl mx-auto">
           <h1 className="text-3xl font-serif font-bold text-black mb-8">Rekapitulasi Penjualan</h1>
