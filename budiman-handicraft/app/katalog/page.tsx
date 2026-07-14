@@ -312,9 +312,9 @@ export default function KatalogPage() {
                   {currentProducts.map((produk) => (
                     <div key={produk.id} className="flex flex-col group">
                       <Link href={`/katalog/${produk.id}`} className="group-hover:cursor-pointer block">
-                        <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4 relative overflow-hidden">
+                        <div className="aspect-square bg-gray-100 rounded-sm mb-4 relative overflow-hidden">
                           {produk.gambar_url ? (
-                            <Image src={produk.gambar_url[0]} alt={produk.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500"/>
+                            <Image src={produk.gambar_url[0]} alt={produk.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500 p-2"/>
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No Image</div>
                           )}
