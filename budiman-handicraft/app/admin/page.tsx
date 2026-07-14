@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-2">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-2xl font-serif font-bold text-black">5 Pesanan Terbaru</h3>
-                    <Link href="/admin/histori" className="bg-[#df9e3d] text-black text-xs font-bold px-3 py-1 rounded-full hover:bg-opacity-80 transition-opacity">Selengkapnya</Link>
+                    <Link href="/admin/history" className="bg-[#df9e3d] text-black text-xs font-bold px-3 py-1 rounded-full hover:bg-opacity-80 transition-opacity">Selengkapnya</Link>
                   </div>
                   
                   <div className="bg-[#fcebaf] rounded-md overflow-hidden shadow-sm border border-[#df9e3d]">
