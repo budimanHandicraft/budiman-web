@@ -25,20 +25,19 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Mengubah tampilan bawaan scrollbar browser menjadi lebih elegan */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px; /* Bikin scrollbar jadi lebih ramping */
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent; /* Membuat jalur putih jeleknya jadi tembus pandang */
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #d99738; /* Warna emas/oranye agar senada dengan tema Buku Kas */
-  border-radius: 10px; /* Bikin ujung scrollbar membulat halus */
+  background-color: #d99738;
+  border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #b57a26; /* Warna saat scrollbar ditahan/diklik */
+  background-color: #b57a26;
 }
