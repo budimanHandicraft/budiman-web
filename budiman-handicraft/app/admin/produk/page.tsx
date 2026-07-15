@@ -144,7 +144,7 @@ export default function AdminProduk() {
 
   const tambahVarianKosong = () => {
     if (!editData) return;
-    setVarianList([...varianList, {
+    setVarianList(prev => [...prev, {
       id: `temp-${Date.now()}`,
       produk_id: editData.id,
       tipe_varian_1: '',
@@ -420,7 +420,7 @@ export default function AdminProduk() {
         )}
 
         {isEditModalOpen && editData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pl-64 pt-28 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pl-64 pt-28 bg-black/60 backdrop-blur-sm">
             <form onSubmit={handleUpdate} className="bg-[#fcfaf5] border-2 border-[#df9e3d] w-full max-w-5xl rounded-lg shadow-2xl p-8 relative max-h-[80vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-2xl font-serif font-bold text-black mb-8 border-b-2 border-[#df9e3d] pb-4">Edit Data Induk & Manajemen Varian</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -439,7 +439,7 @@ export default function AdminProduk() {
 
                   <div>
                     <label className="text-black block text-[10px] font-bold uppercase tracking-wider mb-1">Deskripsi</label>
-                    <textarea rows={4} required value={editData.deskripsi} onChange={(e) => setEditData({...editData, deskripsi: e.target.value})} className="w-full bg-white border border-[#d99738] p-2 text-sm text-black rounded-sm focus:border-black outline-none transition-colors" />
+                    <textarea rows={4} required value={editData.deskripsi || ''} onChange={(e) => setEditData({...editData, deskripsi: e.target.value})} className="w-full bg-white border border-[#d99738] p-2 text-sm text-black rounded-sm focus:border-black outline-none transition-colors" />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
@@ -476,15 +476,15 @@ export default function AdminProduk() {
                     {varianList.map((v, idx) => (
                       <div key={v.id} className="text-black flex flex-wrap gap-3 items-end bg-[#fcebaf] p-4 rounded-sm border border-[#df9e3d] shadow-sm relative">
                         <div className="flex-1 min-w-[100px]">
-                          <label className="text-[9px] font-bold uppercase mb-1 block tracking-wider">Tipe (Msl: Warna)</label>
+                          <label className="text-[9px] font-bold mb-1 block tracking-wider">Tipe (Misal: warna)</label>
                           <input type="text" placeholder="Kosong = Hapus" value={v.tipe_varian_1 || ''} onChange={(e) => updateLocalVarian(idx, 'tipe_varian_1', e.target.value)} className="w-full bg-white border border-[#d99738] p-1.5 text-xs rounded-sm outline-none focus:border-black" />
                         </div>
                         <div className="flex-1 min-w-[100px]">
-                          <label className="text-[9px] font-bold uppercase mb-1 block tracking-wider">Nilai (Msl: Emas)</label>
+                          <label className="text-[9px] font-bold mb-1 block tracking-wider">Nilai (Misal: emas)</label>
                           <input type="text" value={v.nilai_varian_1 || ''} onChange={(e) => updateLocalVarian(idx, 'nilai_varian_1', e.target.value)} className="w-full bg-white border border-[#d99738] p-1.5 text-xs rounded-sm outline-none focus:border-black" />
                         </div>
                         <div className="flex-1 min-w-[90px]">
-                          <label className="text-[9px] font-bold uppercase mb-1 block tracking-wider">Harga Khusus</label>
+                          <label className="text-[9px] font-bold mb-1 block tracking-wider">Harga Khusus</label>
                           <input type="number" placeholder="Ikut Induk" value={v.harga || ''} onChange={(e) => updateLocalVarian(idx, 'harga', e.target.value)} className="w-full bg-white border border-[#d99738] p-1.5 text-xs rounded-sm outline-none focus:border-black" />
                         </div>
                         <div className="flex-1 min-w-[70px]">
@@ -496,7 +496,7 @@ export default function AdminProduk() {
                       </div>
                     ))}
 
-                    <button type="button" onClick={tambahVarianKosong} className="w-full py-3 border-2 border-dashed border-[#d99738] text-[#b57a26] rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-[#fcebaf] hover:text-black transition-colors cursor-pointer mt-2">+ Tambah Baris Varian</button>
+                    <button type="button" onClick={tambahVarianKosong} disabled={isLoadingVarian} className="w-full py-3 border-2 border-dashed border-[#d99738] text-[#b57a26] rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-[#fcebaf] hover:text-black transition-colors cursor-pointer mt-2">+ Tambah Baris Varian</button>
                   </div>
                   
                   <p className="text-[10px] text-gray-500 italic text-justify leading-relaxed mt-2">*Kosongkan kolom Harga jika harganya sama dengan harga induk. Kosongkan kolom Stok jika stoknya tidak dipisah per varian.</p>
