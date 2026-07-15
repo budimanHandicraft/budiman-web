@@ -1,211 +1,249 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useRef } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
 
-interface DetailTransaksi {
-  kuantitas: number;
-  produk: {
-    nama_produk: string;
-  };
-}
+const BULAN_LIST = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const tahunSekarang = new Date().getFullYear();
+const TAHUN_LIST = Array.from({ length: 7 }, (_, i) => (tahunSekarang - 2 + i).toString());
+const STATUS_LIST = ['Semua', 'pending', 'dikemas', 'dikirim', 'retur', 'selesai'];
 
-interface Transaksi {
-  id: string;
-  order_id: string;
-  nama_pembeli: string;
-  kontak_pembeli: string;
-  alamat_lengkap: string;
-  total_belanja: number;
-  ongkos_kirim: number;
-  status_pembayaran: string;
-  status_pengiriman: string;
-  nomor_resi: string | null;
-  created_at: string;
-  detail_transaksi: DetailTransaksi[];
-}
+export default function HistoriTransaksi() {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-export default function AdminTransaksi() {
-  const [transaksiList, setTransaksiList] = useState<Transaksi[]>([]);
+  const [transaksi, setTransaksi] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTx, setSelectedTx] = useState<Transaksi | null>(null);
-  const [inputResi, setInputResi] = useState('');
-  const [inputStatus, setInputStatus] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
+  
+  const [selectedBulan, setSelectedBulan] = useState(new Date().getMonth());
+  const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear().toString());
+  const [isBulanOpen, setIsBulanOpen] = useState(false);
+  const [isTahunOpen, setIsTahunOpen] = useState(false);
+  
+  const [statusFilter, setStatusFilter] = useState('Semua');
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const formatRupiah = (angka: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+  };
 
   useEffect(() => {
+    const fetchTransaksi = async () => {
+      setIsLoading(true);
+      let dataToDisplay = [];
+      let totalItems = 0;
+      const startDate = new Date(parseInt(selectedTahun), selectedBulan, 1).toISOString();
+      const endDate = new Date(parseInt(selectedTahun), selectedBulan + 1, 1).toISOString();
+
+      if (statusFilter === 'Semua') {
+        const { data: belumSelesai } = await supabase
+          .from('vw_histori_transaksi')
+          .select('*')
+          .neq('status_pengiriman', 'selesai')
+          .gte('created_at', startDate)
+          .lt('created_at', endDate);
+          
+        const { data: sudahSelesai } = await supabase
+          .from('vw_histori_transaksi')
+          .select('*')
+          .eq('status_pengiriman', 'selesai')
+          .gte('created_at', startDate)
+          .lt('created_at', endDate)
+          .order('created_at', { ascending: false })
+          .limit(10);
+          
+        let combined = [...(belumSelesai || []), ...(sudahSelesai || [])];
+        combined.sort((a, b) => {
+          if (a.prioritas_status !== b.prioritas_status) return a.prioritas_status - b.prioritas_status;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        
+        totalItems = combined.length;
+        setTotalPages(Math.ceil(totalItems / 15) || 1);
+        
+        const startIdx = (currentPage - 1) * 15;
+        dataToDisplay = combined.slice(startIdx, startIdx + 15);
+
+      } else {
+        const ITEMS_PER_PAGE = 10;
+        const from = (currentPage - 1) * ITEMS_PER_PAGE;
+        const to = from + (ITEMS_PER_PAGE - 1);
+        
+        const { data, count } = await supabase
+          .from('vw_histori_transaksi')
+          .select('*', { count: 'exact' })
+          .eq('status_pengiriman', statusFilter)
+          .gte('created_at', startDate)
+          .lt('created_at', endDate)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+          
+        dataToDisplay = data || [];
+        const maxData = Math.min(count || 0, 50);
+        setTotalPages(Math.ceil(maxData / ITEMS_PER_PAGE) || 1);
+      }
+
+      const formatted = dataToDisplay.map((trx: any) => {
+        const tambahan = trx.sisa_produk > 0 ? ` (+${trx.sisa_produk} lainnya)` : '';
+        return {
+          id: trx.order_id,
+          tanggal: new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+          produk: `${trx.produk_utama || 'Produk dihapus'}${tambahan}`,
+          tagihan: formatRupiah((trx.total_belanja || 0) + (trx.ongkos_kirim || 0)),
+          status: trx.status_pengiriman || 'Pending'
+        };
+      });
+
+      setTransaksi(formatted);
+      setIsLoading(false);
+    };
+
     fetchTransaksi();
-  }, []);
+  }, [supabase, statusFilter, currentPage, selectedBulan, selectedTahun]);
 
-  const fetchTransaksi = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('transaksi')
-      .select(`
-        *,
-        detail_transaksi (
-          kuantitas,
-          produk ( nama_produk )
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Gagal mengambil data:', error);
-    } else {
-      setTransaksiList(data as any);
-    }
-    setIsLoading(false);
-  };
-
-  const bukaModalUpdate = (tx: Transaksi) => {
-    setSelectedTx(tx);
-    setInputResi(tx.nomor_resi || '');
-    setInputStatus(tx.status_pengiriman);
-  };
-
-  const handleUpdatePengiriman = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTx) return;
-    setIsUpdating(true);
-
-    const { error } = await supabase
-      .from('transaksi')
-      .update({
-        nomor_resi: inputResi,
-        status_pengiriman: inputStatus
-      })
-      .eq('id', selectedTx.id);
-
-    setIsUpdating(false);
-
-    if (error) {
-      alert('Gagal memperbarui status pengiriman!');
-    } else {
-      alert('Status pengiriman berhasil diperbarui!');
-      setSelectedTx(null);
-      fetchTransaksi();
-    }
-  };
+  const MINIMUM_ROWS = statusFilter === 'Semua' ? 15 : 10;
+  const emptyRows = Math.max(0, MINIMUM_ROWS - transaksi.length);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">Pesanan Masuk</h1>
-
-      <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1000px]">
-          <thead>
-            <tr className="bg-gray-100 border-b text-sm text-gray-600">
-              <th className="p-4">Order ID & Waktu</th>
-              <th className="p-4">Pembeli & Alamat</th>
-              <th className="p-4">Pesanan (Isi Paket)</th>
-              <th className="p-4">Total + Ongkir</th>
-              <th className="p-4">Pembayaran</th>
-              <th className="p-4">Pengiriman</th>
-              <th className="p-4">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={7} className="text-center p-8">Memuat data...</td></tr>
-            ) : transaksiList.length === 0 ? (
-              <tr><td colSpan={7} className="text-center p-8 text-gray-500">Belum ada pesanan masuk.</td></tr>
-            ) : (
-              transaksiList.map((tx) => (
-                <tr key={tx.id} className="border-b hover:bg-gray-50 align-top">
-                  
-                  <td className="p-4">
-                    <div className="font-semibold text-blue-600">{tx.order_id}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                  </td>
-
-                  <td className="p-4 max-w-[200px]">
-                    <div className="font-medium text-gray-800">{tx.nama_pembeli}</div>
-                    <div className="text-xs text-gray-500 mt-1">{tx.kontak_pembeli}</div>
-                    <div className="text-xs text-gray-600 mt-2 bg-gray-100 p-2 rounded line-clamp-3">
-                      {tx.alamat_lengkap}
-                    </div>
-                  </td>
-
-                  <td className="p-4">
-                    <ul className="list-disc pl-4 text-sm text-gray-700">
-                      {tx.detail_transaksi.map((item, index) => (
-                        <li key={index}>
-                          {item.kuantitas}x {item.produk?.nama_produk || 'Produk Dihapus'}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-
-                  <td className="p-4 text-sm">
-                    <div>Barang: Rp {tx.total_belanja.toLocaleString('id-ID')}</div>
-                    <div className="text-gray-500">Ongkir: Rp {tx.ongkos_kirim?.toLocaleString('id-ID') || 0}</div>
-                    <div className="font-bold mt-1 text-gray-800">
-                      Total: Rp {(Number(tx.total_belanja) + Number(tx.ongkos_kirim || 0)).toLocaleString('id-ID')}
-                    </div>
-                  </td>
-
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      tx.status_pembayaran === 'PAID' ? 'bg-green-100 text-green-700' : 
-                      tx.status_pembayaran === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {tx.status_pembayaran}
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    <div className="font-medium text-sm text-gray-800">{tx.status_pengiriman}</div>
-                    {tx.nomor_resi && (
-                      <div className="text-xs mt-1 text-blue-600 font-mono bg-blue-50 p-1 rounded inline-block">
-                        Resi: {tx.nomor_resi}
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="p-4">
-                    <button onClick={() => bukaModalUpdate(tx)} className="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-700 transition">Update Resi</button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {selectedTx && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">Update Pengiriman</h2>
-            <p className="text-sm text-gray-600 mb-6">Order: <span className="font-bold">{selectedTx.order_id}</span></p>
-            <form onSubmit={handleUpdatePengiriman}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Status Pengiriman</label>
-                <select value={inputStatus} onChange={(e) => setInputStatus(e.target.value)} className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="DIKEMAS">Sedang Dikemas</option>
-                  <option value="DIKIRIM">Sudang Dikirim (Input Resi)</option>
-                  <option value="SELESAI">Selesai (Diterima Pembeli)</option>
-                </select>
+    <div className="w-full mt-18 p-8 md:p-12 relative min-h-screen">
+      <div className="absolute top-6 right-20 w-[400px] h-[250px] bg-[url('/awanKuning.svg')] bg-cover opacity-50 pointer-events-none transform"></div>
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <h1 className="text-4xl font-serif font-bold text-black tracking-wide">Histori Transaksi</h1>
+          <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+            <div className="relative flex items-center">
+              <div className="bg-[#df9e3d] text-black font-bold text-sm px-6 py-2 rounded-l-full shadow-sm z-10">Bulan</div>
+              <div onClick={() => setIsBulanOpen(!isBulanOpen)}
+                className="bg-white border border-gray-200 text-black text-sm px-4 py-2 rounded-r-full shadow-sm cursor-pointer min-w-[120px] flex justify-between items-center -ml-2 pl-4"
+              >
+                {BULAN_LIST[selectedBulan]}
+                <span className="bg-black text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] ml-2 font-bold">&#8594;</span>
               </div>
+              
+              {isBulanOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-32 max-h-48 overflow-y-auto no-scrollbar">
+                  {BULAN_LIST.map((bln, idx) => (
+                    <div key={bln} onClick={() => { setSelectedBulan(idx); setCurrentPage(1); setIsBulanOpen(false); }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black ${selectedBulan === idx ? 'bg-gray-100 font-bold' : ''}`}
+                    >
+                      {bln}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">Nomor Resi Kurir</label>
-                <input type="text" value={inputResi} onChange={(e) => setInputResi(e.target.value)} placeholder="Misal: J&T123456789" className="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
-                <p className="text-xs text-gray-500 mt-1">Biarkan kosong jika belum dikirim ke kurir.</p>
+            <div className="relative flex items-center">
+              <div className="bg-[#df9e3d] text-black font-bold text-sm px-6 py-2 rounded-l-full shadow-sm z-10">Tahun</div>
+              <div onClick={() => setIsTahunOpen(!isTahunOpen)}
+                className="bg-white border border-gray-200 text-black text-sm px-4 py-2 rounded-r-full shadow-sm cursor-pointer min-w-[100px] flex justify-between items-center -ml-2 pl-4"
+              >
+                {selectedTahun}
+                <span className="bg-black text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] ml-2 font-bold">&#8594;</span>
               </div>
+              
+              {isTahunOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-28 max-h-48 overflow-y-auto no-scrollbar">
+                  {TAHUN_LIST.map((thn) => (
+                    <div key={thn} onClick={() => { setSelectedTahun(thn); setCurrentPage(1); setIsTahunOpen(false); }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black ${selectedTahun === thn ? 'bg-gray-100 font-bold' : ''}`}
+                    >
+                      {thn}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="flex space-x-3">
-                <button type="button" onClick={() => setSelectedTx(null)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300">Batal</button>
-                <button type="submit" disabled={isUpdating} className={`flex-1 text-white py-2 rounded-lg font-bold transition ${isUpdating ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                  {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </button>
+            <div className="relative flex items-center">
+              <div className="bg-[#df9e3d] text-black font-bold text-sm px-6 py-2 rounded-l-full shadow-sm z-10">Status</div>
+              <div onClick={() => setIsStatusOpen(!isStatusOpen)}
+                className="bg-white border border-gray-200 text-black text-sm px-4 py-2 rounded-r-full shadow-sm cursor-pointer min-w-[120px] flex justify-between items-center -ml-2 pl-4 capitalize"
+              >
+                {statusFilter}
+                <span className="bg-black text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] ml-2 font-bold">&#8594;</span>
               </div>
-            </form>
+              
+              {isStatusOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-32 max-h-48 overflow-y-auto no-scrollbar">
+                  {STATUS_LIST.map((stat) => (
+                    <div key={stat} onClick={() => { setStatusFilter(stat); setCurrentPage(1); setIsStatusOpen(false); }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black capitalize ${statusFilter === stat ? 'bg-gray-100 font-bold' : ''}`}
+                    >
+                      {stat}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="mt-16 bg-[#fcebaf] rounded-lg shadow-xl overflow-hidden border border-[#df9e3d]">
+          <table className="w-full text-sm text-center">
+            <thead className="bg-[#d99738] text-black font-bold">
+              <tr>
+                <th className="px-4 py-4 w-1/6">Tanggal</th>
+                <th className="px-4 py-4 w-1/6">Order ID</th>
+                <th className="px-4 py-4 w-2/6">Produk</th>
+                <th className="px-4 py-4 w-1/6">Total Tagihan</th>
+                <th className="px-4 py-4 w-1/6">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={5} className="py-8 font-bold text-[#df9e3d] animate-pulse">Memuat data transaksi...</td></tr>
+              ) : (
+                <>
+                  {transaksi.map((order, idx) => (
+                    <tr key={idx} className="border-b border-[#ebd28a] text-black font-medium hover:bg-[#fae498] transition-colors h-12">
+                      <td className="px-4">{order.tanggal}</td>
+                      <td className="px-4">{order.id}</td>
+                      <td className="px-4 truncate max-w-[200px]">{order.produk}</td>
+                      <td className="px-4">{order.tagihan}</td>
+                      <td className="px-4">
+                        <span className={`px-3 py-1 text-[11px] uppercase font-bold rounded-sm ${order.status.toLowerCase() === 'selesai' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {[...Array(emptyRows)].map((_, idx) => (
+                    <tr key={`empty-${idx}`} className="border-b border-[#ebd28a] h-12">
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  ))}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {!isLoading && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+              className="px-4 py-2 bg-[#d99738] hover:bg-[#df9e3d] text-black rounded-md text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              SEBELUMNYA
+            </button>
+            <span className="text-black font-bold text-sm border-b-2 border-[#d99738] pb-1">Halaman {currentPage} dari {totalPages}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-[#d99738] hover:bg-[#df9e3d] text-black rounded-md text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              SELANJUTNYA
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
