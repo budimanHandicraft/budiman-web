@@ -125,14 +125,16 @@ export default function HistoriTransaksi() {
               </div>
               
               {isBulanOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-32 max-h-48 overflow-y-auto no-scrollbar">
-                  {BULAN_LIST.map((bln, idx) => (
-                    <div key={bln} onClick={() => { setSelectedBulan(idx); setCurrentPage(1); setIsBulanOpen(false); }}
-                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black ${selectedBulan === idx ? 'bg-gray-100 font-bold' : ''}`}
-                    >
-                      {bln}
-                    </div>
-                  ))}
+                <div className="absolute top-full right-0 mt-2 bg-[#fcebaf] border-2 border-[#df9e3d] shadow-xl rounded-md overflow-hidden z-50 w-32">
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar flex flex-col">
+                    {BULAN_LIST.map((bln, idx) => (
+                      <div key={bln} onClick={() => { setSelectedBulan(idx); setCurrentPage(1); setIsBulanOpen(false); }}
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors ${selectedBulan === idx ? 'bg-[#d99738] text-white font-bold' : 'text-black hover:bg-[#fae498]'}`}
+                      >
+                        {bln}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -147,14 +149,16 @@ export default function HistoriTransaksi() {
               </div>
               
               {isTahunOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-28 max-h-48 overflow-y-auto no-scrollbar">
-                  {TAHUN_LIST.map((thn) => (
-                    <div key={thn} onClick={() => { setSelectedTahun(thn); setCurrentPage(1); setIsTahunOpen(false); }}
-                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black ${selectedTahun === thn ? 'bg-gray-100 font-bold' : ''}`}
-                    >
-                      {thn}
-                    </div>
-                  ))}
+                <div className="absolute top-full right-0 mt-2 bg-[#fcebaf] border-2 border-[#df9e3d] shadow-xl rounded-md overflow-hidden z-50 w-32">
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar flex flex-col">
+                    {TAHUN_LIST.map((thn) => (
+                      <div key={thn} onClick={() => { setSelectedTahun(thn); setCurrentPage(1); setIsTahunOpen(false); }}
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors ${selectedTahun === thn ? 'bg-[#d99738] text-white font-bold' : 'text-black hover:bg-[#fae498]'}`}
+                      >
+                        {thn}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -169,14 +173,16 @@ export default function HistoriTransaksi() {
               </div>
               
               {isStatusOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 w-32 max-h-48 overflow-y-auto no-scrollbar">
-                  {STATUS_LIST.map((stat) => (
-                    <div key={stat} onClick={() => { setStatusFilter(stat); setCurrentPage(1); setIsStatusOpen(false); }}
-                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 text-black capitalize ${statusFilter === stat ? 'bg-gray-100 font-bold' : ''}`}
-                    >
-                      {stat}
-                    </div>
-                  ))}
+                <div className="absolute top-full right-0 mt-2 bg-[#fcebaf] border-2 border-[#df9e3d] shadow-xl rounded-md overflow-hidden z-50 w-32">
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar flex flex-col">
+                    {STATUS_LIST.map((stat) => (
+                      <div key={stat} onClick={() => { setStatusFilter(stat); setCurrentPage(1); setIsStatusOpen(false); }}
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors capitalize ${statusFilter === stat ? 'bg-[#d99738] text-white font-bold' : 'text-black hover:bg-[#fae498]'}`}
+                      >
+                        {stat}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
