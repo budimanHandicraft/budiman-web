@@ -30,7 +30,7 @@ export default function AdminSidebar() {
 
   return (
     <aside className="w-64 bg-[#141414] text-white flex flex-col relative z-20 shadow-2xl overflow-hidden shrink-0">
-      <div className="absolute top-0 left-0 w-full h-full bg-[url('/awan.svg')] bg-[length:100%_auto] bg-top bg-repeat-y opacity-80 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[url('/awan.svg')] bg-[length:130%_auto] bg-top bg-repeat-y opacity-80 mix-blend-screen pointer-events-none"></div>
       
       <div className="p-8 flex items-center gap-3 relative z-10">
         <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
