@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createBrowserClient } from '@supabase/ssr';
 
@@ -15,8 +16,10 @@ interface CartItem {
 }
 
 export default function MarketPage() {
+  const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -100,7 +103,7 @@ export default function MarketPage() {
       }
     };
     fetchCost();
-  }, [selectedDestination]);
+  }, [selectedDestination, cartItems]);
 
   const hapusItem = (id: string) => {
     const konfirmasi = window.confirm("Apakah kamu yakin ingin menghapus produk ini dari keranjang?");
@@ -131,14 +134,69 @@ export default function MarketPage() {
     setIsModalOpen(false);
   };
 
-  const handleCheckout = () => {
-    alert("Proses Checkout Berhasil! Data pesanan diproses (Simulasi).");
-    
-    localStorage.removeItem('keranjang_umkm');
-    setCartItems([]);
-    setShippingCost(0);
-    setSelectedDestination('');
-    setSearchQuery('');
+  const handleCheckout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      alert("Silakan Login atau Register terlebih dahulu untuk membuat pesanan.");
+      router.push('/login');
+      return;
+    }
+
+    if (!email || !fullName || !phone || !address || !postcode || !selectedDestination) {
+      return alert("Mohon lengkapi semua data pengiriman dan kontak terlebih dahulu!");
+    }
+
+    setIsSubmitting(true);
+    try {
+      const orderIdCustom = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const pelangganId = session?.user?.id || null;
+      const payloadTransaksi = {
+        order_id: orderIdCustom,
+        nama_pembeli: fullName,
+        kontak_pembeli: `${phone} | ${email}`,
+        alamat_lengkap: `${address} (Kodepos: ${postcode})`,
+        kota_tujuan_id: selectedDestination,
+        total_belanja: subtotal,
+        ongkos_kirim: shippingCost,
+        status_pembayaran: 'menunggu_pembayaran',
+        status_pengiriman: 'belum_diproses',
+        pelanggan_id: pelangganId
+      };
+
+      const { data: transaksiData, error: transaksiError } = await supabase
+        .from('transaksi')
+        .insert([payloadTransaksi])
+        .select('id, order_id') 
+        .single();
+
+      if (transaksiError) throw transaksiError;
+      const payloadDetail = cartItems.map(item => ({
+        transaksi_id: transaksiData.id,
+        produk_id: item.id,
+        kuantitas: item.kuantitas,
+        harga_satuan: item.harga
+      }));
+
+      const { error: detailError } = await supabase
+        .from('detail_transaksi')
+        .insert(payloadDetail);
+
+      if (detailError) throw detailError;
+
+      localStorage.removeItem('keranjang_umkm');
+      setCartItems([]);
+      setShippingCost(0);
+      setSelectedDestination('');
+      setSearchQuery('');
+      
+      router.push(`/pembayaran/${transaksiData.order_id}`);
+
+    } catch (error: any) {
+      alert(`Gagal membuat pesanan: ${error.message}`);
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
@@ -297,13 +355,19 @@ export default function MarketPage() {
             <span className="text-2xl font-serif font-bold text-white italic">Rp {grandTotal.toLocaleString('id-ID')}</span>
           </div>
 
-          <button disabled={cartItems.length === 0 || !selectedDestination} onClick={handleCheckout}
+          <button disabled={cartItems.length === 0 || !selectedDestination || isSubmitting} onClick={handleCheckout}
             className="w-full bg-[#d9dbd0] hover:bg-white text-gray-900 font-bold py-4 px-6 rounded-sm flex items-center justify-center gap-3 uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Complete Purchase
+            {isSubmitting ? (
+              <span className="animate-pulse">Processing Order...</span>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Complete Purchase
+              </>
+            )}
           </button>
         </div>
       </section>
