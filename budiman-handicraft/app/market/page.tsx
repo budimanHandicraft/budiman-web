@@ -92,7 +92,7 @@ export default function MarketPage() {
         const res = await fetch(`/api/ongkir`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin: "4816", destination: selectedDestination, weight: beratKirim.toString(), courier: "jne" })
+          body: JSON.stringify({ origin: "45367", destination: selectedDestination, weight: beratKirim.toString(), courier: "jne" })
         });
         const data = await res.json();
         if (data?.data && data.data.length > 0) {
