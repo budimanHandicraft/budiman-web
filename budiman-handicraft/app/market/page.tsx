@@ -31,6 +31,7 @@ export default function MarketPage() {
   const [destinations, setDestinations] = useState<any[]>([]);
   const [selectedDestination, setSelectedDestination] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState<{id: string, kuantitas: number | string, catatan: string} | null>(null);
@@ -83,27 +84,34 @@ export default function MarketPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (!selectedDestination) {
-      setShippingCost(0);
-      return;
-    }
-    const fetchCost = async () => {
-      try {
-        const res = await fetch(`/api/ongkir`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin: "45367", destination: selectedDestination, weight: beratKirim.toString(), courier: "jne" })
-        });
-        const data = await res.json();
-        if (data?.data && data.data.length > 0) {
-          setShippingCost(data.data[0].cost + 5000);
-        }
-      } catch (error) {
-        console.error("Gagal memuat ongkir", error);
+  if (!selectedDestination) {
+    setShippingCost(0);
+    setShippingOptions([]);
+    return;
+  }
+  const fetchCost = async () => {
+    try {
+      const res = await fetch(`/api/ongkir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          origin: "45363", 
+          destination: selectedDestination, 
+          weight: beratKirim.toString(), 
+          courier: "jne"
+        })
+      });
+      const data = await res.json();
+      if (data?.data && data.data.length > 0) {
+        const filteredOptions = data.data.filter((opt: any) => !opt.service.includes('JTR'));
+        setShippingOptions(filteredOptions);
       }
-    };
-    fetchCost();
-  }, [selectedDestination, cartItems]);
+    } catch (error) {
+      console.error("Gagal memuat ongkir", error);
+    }
+  };
+  fetchCost();
+}, [selectedDestination, cartItems]);
 
   const hapusItem = (id: string) => {
     const konfirmasi = window.confirm("Apakah kamu yakin ingin menghapus produk ini dari keranjang?");
@@ -256,6 +264,23 @@ export default function MarketPage() {
                     <option value="">-- Pilih dari hasil pencarian --</option>
                     {destinations.map(dest => (
                       <option key={dest.id} value={dest.id}>{dest.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {shippingOptions.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2 italic">Pilih Layanan Pengiriman</label>
+                  <select 
+                    onChange={(e) => setShippingCost(parseFloat(e.target.value))} 
+                    className="text-black w-full bg-[#f0f0f0] p-3 text-sm rounded-sm"
+                  >
+                    <option value="">-- Pilih layanan --</option>
+                    {shippingOptions.map((opt: any, i: number) => (
+                      <option key={i} value={opt.cost + 5000}>
+                        {opt.service} - Rp {(opt.cost + 5000).toLocaleString('id-ID')} ({opt.etd} hari)
+                      </option>
                     ))}
                   </select>
                 </div>
