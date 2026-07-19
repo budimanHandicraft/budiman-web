@@ -6,7 +6,7 @@ import { createBrowserClient } from '@supabase/ssr';
 const BULAN_LIST = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const tahunSekarang = new Date().getFullYear();
 const TAHUN_LIST = Array.from({ length: 7 }, (_, i) => (tahunSekarang - 2 + i).toString());
-const STATUS_LIST = ['Semua', 'pending', 'dikemas', 'dikirim', 'retur', 'selesai'];
+const STATUS_LIST = ['Semua', 'menunggu_konfirmasi', 'dikemas', 'dikirim', 'retur', 'selesai'];
 
 export default function HistoriTransaksi() {
   const supabase = createBrowserClient(
@@ -26,6 +26,10 @@ export default function HistoriTransaksi() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [detailItems, setDetailItems] = useState<any[]>([]);
   
   const formatRupiah = (angka: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -94,7 +98,8 @@ export default function HistoriTransaksi() {
           tanggal: new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
           produk: `${trx.produk_utama || 'Produk dihapus'}${tambahan}`,
           tagihan: formatRupiah((trx.total_belanja || 0) + (trx.ongkos_kirim || 0)),
-          status: trx.status_pengiriman || 'Pending'
+          status: trx.status_pengiriman || 'menunggu_konfirmasi',
+          status_pembayaran: trx.status_pembayaran
         };
       });
 
@@ -107,6 +112,30 @@ export default function HistoriTransaksi() {
 
   const MINIMUM_ROWS = statusFilter === 'Semua' ? 15 : 10;
   const emptyRows = Math.max(0, MINIMUM_ROWS - transaksi.length);
+
+  const bukaDetail = async (orderId: string) => {
+    const { data: order } = await supabase.from('transaksi').select('*').eq('order_id', orderId).single();
+    const { data: items } = await supabase.from('detail_transaksi').select('*, produk(* )').eq('transaksi_id', order.id);
+    
+    setSelectedOrder(order);
+    setDetailItems(items || []);
+    setIsDetailOpen(true);
+  };
+
+  const konfirmasiPesanan = async (orderId: string) => {
+    if (!confirm("Apakah yakin ingin mengonfirmasi pembayaran pesanan ini?")) return;
+    
+    const { error } = await supabase
+      .from('transaksi')
+      .update({ status_pembayaran: 'lunas', status_pengiriman: 'dikemas' })
+      .eq('order_id', orderId);
+      
+    if (!error) {
+      alert("Pesanan berhasil dikonfirmasi!");
+      setIsDetailOpen(false);
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="w-full mt-18 p-8 md:p-12 relative min-h-screen">
@@ -198,6 +227,7 @@ export default function HistoriTransaksi() {
                 <th className="px-4 py-4 w-2/6">Produk</th>
                 <th className="px-4 py-4 w-1/6">Total Tagihan</th>
                 <th className="px-4 py-4 w-1/6">Status</th>
+                <th className="px-4 py-4">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -206,15 +236,24 @@ export default function HistoriTransaksi() {
               ) : (
                 <>
                   {transaksi.map((order, idx) => (
-                    <tr key={idx} className="border-b border-[#ebd28a] text-black font-medium hover:bg-[#fae498] transition-colors h-12">
+                    <tr key={idx} className="border-b border-[#ebd28a] text-black hover:bg-[#fae498]">
                       <td className="px-4">{order.tanggal}</td>
                       <td className="px-4">{order.id}</td>
-                      <td className="px-4 truncate max-w-[200px]">{order.produk}</td>
                       <td className="px-4">{order.tagihan}</td>
                       <td className="px-4">
-                        <span className={`px-3 py-1 text-[11px] uppercase font-bold rounded-sm ${order.status.toLowerCase() === 'selesai' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}`}>
-                          {order.status}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm ${
+                            order.status_pembayaran === 'lunas' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {order.status_pembayaran}
+                          </span>
+                          <span className="px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm bg-yellow-100 text-yellow-700">
+                            {order.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4">
+                        <button onClick={() => bukaDetail(order.id)} className="bg-black text-white text-[10px] px-3 py-1 rounded-full uppercase">Detail</button>
                       </td>
                     </tr>
                   ))}
@@ -250,6 +289,37 @@ export default function HistoriTransaksi() {
           </div>
         )}
       </div>
+
+      {isDetailOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Detail Pesanan: {selectedOrder.order_id}</h2>
+  
+            {selectedOrder.bukti_bayar_url && (
+              <div className="mb-6">
+                <p className="font-bold text-sm mb-2">Bukti Pembayaran:</p>
+                <img src={selectedOrder.bukti_bayar_url} className="w-48 h-48 object-cover border" />
+              </div>
+            )}
+
+            <div className="mb-6">
+              {detailItems.map((item: any) => (
+                <div key={item.id} className="flex justify-between text-sm py-2 border-b">
+                  <span>{item.produk?.nama_produk || 'Produk'} x {item.kuantitas}</span>
+                  <span>{formatRupiah(item.harga_satuan * item.kuantitas)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-4">
+              {selectedOrder.status_pembayaran === 'menunggu_konfirmasi' && (
+                <button onClick={() => konfirmasiPesanan(selectedOrder.order_id)} className="bg-green-600 text-white px-6 py-2 rounded">Konfirmasi Lunas</button>
+              )}
+              <button onClick={() => setIsDetailOpen(false)} className="bg-gray-300 px-6 py-2 rounded">Tutup</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
