@@ -227,7 +227,6 @@ export default function HistoriTransaksi() {
                 <th className="px-4 py-4 w-2/6">Produk</th>
                 <th className="px-4 py-4 w-1/6">Total Tagihan</th>
                 <th className="px-4 py-4 w-1/6">Status</th>
-                <th className="px-4 py-4">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -253,7 +252,7 @@ export default function HistoriTransaksi() {
                         </div>
                       </td>
                       <td className="px-4">
-                        <button onClick={() => bukaDetail(order.id)} className="bg-black text-white text-[10px] px-3 py-1 rounded-full uppercase">Detail</button>
+                        <button onClick={() => bukaDetail(order.id)} className="bg-black text-white text-[10px] px-3 py-1 rounded-full uppercase cursor-pointer">Detail</button>
                       </td>
                     </tr>
                   ))}
@@ -293,16 +292,16 @@ export default function HistoriTransaksi() {
       {isDetailOpen && selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Detail Pesanan: {selectedOrder.order_id}</h2>
+            <h2 className="text-xl font-bold mb-4 text-black">Detail Pesanan: {selectedOrder.order_id}</h2>
   
             {selectedOrder.bukti_bayar_url && (
-              <div className="mb-6">
+              <div className="mb-6 text-black">
                 <p className="font-bold text-sm mb-2">Bukti Pembayaran:</p>
-                <img src={selectedOrder.bukti_bayar_url} className="w-48 h-48 object-cover border" />
+                <img src={selectedOrder.bukti_bayar_url} className="w-48 h-48 object-cover" />
               </div>
             )}
 
-            <div className="mb-6">
+            <div className="mb-6 text-black">
               {detailItems.map((item: any) => (
                 <div key={item.id} className="flex justify-between text-sm py-2 border-b">
                   <span>{item.produk?.nama_produk || 'Produk'} x {item.kuantitas}</span>
@@ -315,7 +314,7 @@ export default function HistoriTransaksi() {
               {selectedOrder.status_pembayaran === 'menunggu_konfirmasi' && (
                 <button onClick={() => konfirmasiPesanan(selectedOrder.order_id)} className="bg-green-600 text-white px-6 py-2 rounded">Konfirmasi Lunas</button>
               )}
-              <button onClick={() => setIsDetailOpen(false)} className="bg-gray-300 px-6 py-2 rounded">Tutup</button>
+              <button onClick={() => setIsDetailOpen(false)} className="border-1 border-red-400 bg-transparent hover:bg-red-400 px-6 py-2 rounded font-bold text-red-400 hover:text-white cursor-pointer">Tutup</button>
             </div>
           </div>
         </div>

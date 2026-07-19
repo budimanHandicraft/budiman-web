@@ -95,7 +95,7 @@ export default function MarketPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          origin: "45363", 
+          origin: "45363",
           destination: selectedDestination, 
           weight: beratKirim.toString(), 
           courier: "jne"
