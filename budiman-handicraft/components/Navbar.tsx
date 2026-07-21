@@ -32,6 +32,18 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const cekStatusLogin = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -72,14 +84,14 @@ export default function Navbar() {
           {/* </div> */}
 
             <div className="hidden md:flex gap-16">
-              <Link href="/" className={`text-[20px] font-medium transition-colors ${pathname === '/' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>About Us</Link>
-              <Link href="/katalog" className={`text-[20px] font-medium transition-colors ${pathname === '/katalog' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Catalog</Link>
-              <Link href="/artisan" className={`text-[20px] font-medium transition-colors ${pathname === '/artisans' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>Artisans</Link>
-              <Link href="/history" className={`text-[20px] font-medium transition-colors ${pathname === '/history' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>History</Link>
+              <Link href="/" className={`text-[20px] font-medium transition-colors ${pathname === '/' ? 'text-[#d77723]' : 'text-black hover:text-gray-700'}`}>About Us</Link>
+              <Link href="/katalog" className={`text-[20px] font-medium transition-colors ${pathname.startsWith('/katalog') ? 'text-[#d77723]' : 'text-black hover:text-gray-700'}`}>Catalog</Link>
+              <Link href="/artisan" className={`text-[20px] font-medium transition-colors ${pathname === '/artisan' ? 'text-[#d77723]' : 'text-black hover:text-gray-700'}`}>Artisans</Link>
+              <Link href="/history" className={`text-[20px] font-medium transition-colors ${pathname === '/history' ? 'text-[#d77723]' : 'text-black hover:text-gray-700'}`}>History</Link>
             </div>
 
           <div className="flex items-center gap-12">
-            <Link href="/market" className={`text-[20px] font-bold transition-colors flex items-center gap-2 ${pathname === '/market' ? 'text-blue-600' : 'text-black hover:text-gray-700'}`}>
+            <Link href="/market" className={`text-[20px] font-bold transition-colors flex items-center gap-2 ${pathname === '/market' ? 'text-[#d77723]' : 'text-black hover:text-gray-700'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
@@ -87,26 +99,38 @@ export default function Navbar() {
             </Link>
 
             {isLoggedIn ? (
-              <div className="relative">
-                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <div className="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">Me</div>
+              <div className="relative user-dropdown">
+                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#d77723]">
+                  <div className="w-7 h-7 bg-[#d77723] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {isAdmin ? 'Ad' : 'Me'}
+                  </div>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100 flex flex-col">
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-sm shadow-xl py-2 border border-gray-100 flex flex-col overflow-hidden">
                     {isAdmin && (
-                      <Link href="/admin"  onClick={() => setIsDropdownOpen(false)} className="px-4 py-2 text-sm font-bold text-blue-600 hover:bg-blue-50 border-b border-gray-50">Masuk ke Dasbor Admin</Link>
+                      <Link href="/admin" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm font-bold text-[#d77723] hover:bg-[#faf9f5] border-b border-gray-50 transition-colors">
+                        Dasbor Admin
+                      </Link>
                     )}
 
-                    <Link href="/profil"  onClick={() => setIsDropdownOpen(false)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Pengaturan Profil</Link>
-                    <Link href="/pesanan"  onClick={() => setIsDropdownOpen(false)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Pesanan Saya</Link>
-                    
-                    <button onClick={handleLogout} className="text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-gray-50 mt-1">Keluar (Logout)</button>
+                    <Link href="/profil" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm text-gray-700 hover:bg-[#faf9f5] hover:text-[#d77723] transition-colors">
+                      Pengaturan Profil
+                    </Link>
+                    <Link href="/pesanan" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm text-gray-700 hover:bg-[#faf9f5] hover:text-[#d77723] transition-colors">
+                      Pesanan Saya
+                    </Link>
+
+                    <button onClick={handleLogout} className="text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-gray-50 mt-1 transition-colors cursor-pointer">
+                      Keluar (Logout)
+                    </button>
                   </div>
                 )}
               </div>
             ) : (
-              <Link href="/login"  className="bg-black text-white px-5 py-2 rounded-lg text-[16px] font-bold hover:bg-gray-800 transition-colors">Login</Link>
+              <Link href="/login" className="bg-[#d77723] hover:bg-[#c2662b] text-white px-5 py-2 rounded-sm text-[16px] font-bold transition-colors">
+                Login
+              </Link>
             )}
 
           </div>
