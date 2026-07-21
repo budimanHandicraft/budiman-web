@@ -104,7 +104,7 @@ export default function HalamanPembayaran() {
           </div>
           <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">Terima Kasih!</h2>
           <p className="text-gray-600 text-sm mb-8 leading-relaxed">Bukti pembayaran untuk pesanan <strong>{orderId}</strong> telah kami terima. Admin kami akan segera memverifikasi pembayaran Anda dan memproses pesanan.</p>
-          <button onClick={() => router.push('/profile')} className="bg-black text-white px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:bg-gray-800 transition">Lihat Status Pesanan</button>
+            <button onClick={() => router.push('/pesanan')} className="bg-black text-white px-6 py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:bg-gray-800 transition">Lihat Status Pesanan</button>
         </div>
       </main>
     );
