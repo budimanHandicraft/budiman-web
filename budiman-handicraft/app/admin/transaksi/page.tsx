@@ -30,6 +30,10 @@ export default function HistoriTransaksi() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [detailItems, setDetailItems] = useState<any[]>([]);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const formatRupiah = (angka: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -137,6 +141,38 @@ export default function HistoriTransaksi() {
     }
   };
 
+  const bukaModalHapus = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const eksekusiHapus = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    
+    try {
+      const { data: trxData } = await supabase
+        .from('transaksi')
+        .select('id')
+        .eq('order_id', orderToDelete)
+        .single();
+
+      if (trxData) {
+        await supabase.from('detail_transaksi').delete().eq('transaksi_id', trxData.id);
+        await supabase.from('transaksi').delete().eq('order_id', orderToDelete);
+      }
+
+      alert("Transaksi berhasil dihapus!");
+      setIsDeleteModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus:", error);
+      alert("Gagal menghapus transaksi. Periksa koneksi atau hak akses.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="w-full mt-18 p-8 md:p-12 relative min-h-screen">
       <div className="absolute top-6 right-20 w-[400px] h-[250px] bg-[url('/awanKuning.svg')] bg-cover opacity-50 pointer-events-none transform"></div>
@@ -223,10 +259,11 @@ export default function HistoriTransaksi() {
             <thead className="bg-[#d99738] text-black font-bold">
               <tr>
                 <th className="px-4 py-4 w-1/6">Tanggal</th>
-                <th className="px-4 py-4 w-1/6">Order ID</th>
+                <th className="py-4 w-1/6">Order ID</th>
                 <th className="px-4 py-4 w-2/6">Produk</th>
                 <th className="px-4 py-4 w-1/6">Total Tagihan</th>
                 <th className="px-4 py-4 w-1/6">Status</th>
+                <th className="px-4 py-4 w-1/6">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -236,10 +273,11 @@ export default function HistoriTransaksi() {
                 <>
                   {transaksi.map((order, idx) => (
                     <tr key={idx} className="border-b border-[#ebd28a] text-black hover:bg-[#fae498]">
-                      <td className="px-4">{order.tanggal}</td>
-                      <td className="px-4">{order.id}</td>
-                      <td className="px-4">{order.tagihan}</td>
-                      <td className="px-4">
+                      <td className="px-4 py-4">{order.tanggal}</td>
+                      <td className="py-4">{order.id}</td>
+                      <td className="px-4 py-4 font-medium">{order.produk}</td>
+                      <td className="px-4 py-4">{order.tagihan}</td>
+                      <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
                           <span className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm ${
                             order.status_pembayaran === 'lunas' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -251,8 +289,15 @@ export default function HistoriTransaksi() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4">
-                        <button onClick={() => bukaDetail(order.id)} className="bg-black text-white text-[10px] px-3 py-1 rounded-full uppercase cursor-pointer">Detail</button>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col gap-2 items-center justify-center">
+                          <button onClick={() => bukaDetail(order.id)} className="w-full max-w-[80px] bg-black text-white text-[10px] px-3 py-1.5 rounded-sm uppercase cursor-pointer hover:bg-gray-800 transition-colors font-bold">
+                            Detail
+                          </button>
+                          <button onClick={() => bukaModalHapus(order.id)} className="w-full max-w-[80px] border border-red-500 text-red-500 text-[10px] px-3 py-1.5 rounded-sm uppercase cursor-pointer hover:bg-red-500 hover:text-white transition-colors font-bold">
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -315,6 +360,40 @@ export default function HistoriTransaksi() {
                 <button onClick={() => konfirmasiPesanan(selectedOrder.order_id)} className="bg-green-600 text-white px-6 py-2 rounded">Konfirmasi Lunas</button>
               )}
               <button onClick={() => setIsDetailOpen(false)} className="border-1 border-red-400 bg-transparent hover:bg-red-400 px-6 py-2 rounded font-bold text-red-400 hover:text-white cursor-pointer">Tutup</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && orderToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full shadow-2xl text-center transform transition-all">
+            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-5">
+              <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Hapus Transaksi?</h3>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              Apakah Anda yakin ingin menghapus pesanan <span className="font-bold text-black">{orderToDelete}</span>? Data yang dihapus tidak dapat dikembalikan.
+            </p>
+            
+            <div className="flex gap-3 justify-center w-full">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)} 
+                disabled={isDeleting}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 font-bold text-xs uppercase rounded-sm hover:bg-gray-50 transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={eksekusiHapus} 
+                disabled={isDeleting}
+                className="flex-1 py-3 bg-red-600 text-white font-bold text-xs uppercase rounded-sm hover:bg-red-700 transition flex items-center justify-center cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
+              </button>
             </div>
           </div>
         </div>
