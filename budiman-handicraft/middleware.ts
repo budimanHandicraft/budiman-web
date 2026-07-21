@@ -21,9 +21,29 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
 
+  // Auth pages: redirect logged-in users away
+  const authPages = ['/login', '/register', '/login/ganti-password', '/login/reset-password'];
+  if (authPages.some(p => pathname === p || pathname.startsWith(p + '/'))) {
+    if (user) {
+      return NextResponse.redirect(new URL('/profil', request.url));
+    }
+    return supabaseResponse;
+  }
+
+  // Protected customer pages: require login
+  const protectedPages = ['/pesanan', '/profil'];
+  if (protectedPages.some(p => pathname === p || pathname.startsWith(p + '/'))) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return supabaseResponse;
+  }
+
+  // Admin pages: require admin role
+  if (pathname.startsWith('/admin')) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -43,5 +63,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/pesanan',
+    '/profil',
+    '/login',
+    '/register',
+    '/login/ganti-password',
+    '/login/reset-password',
+  ],
 };
