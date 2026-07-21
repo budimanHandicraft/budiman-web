@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { createBrowserClient } from '@supabase/ssr';
+import { useToast } from '@/components/ToastProvider';
 
 export default function HalamanPembayaran() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function HalamanPembayaran() {
   const [fileBukti, setFileBukti] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { showToast } = useToast();
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +27,7 @@ export default function HalamanPembayaran() {
     const fetchTransaksi = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        alert("Sesi Anda telah habis. Silakan login kembali.");
+        showToast("Sesi Anda telah habis. Silakan login kembali.", "error");
         router.push('/login');
         return;
       }
@@ -38,7 +40,7 @@ export default function HalamanPembayaran() {
         .single();
 
       if (error || !data) {
-        alert("Pesanan tidak ditemukan atau bukan milik Anda.");
+        showToast("Pesanan tidak ditemukan atau bukan milik Anda.", "error");
         router.push('/market');
         return;
       }
@@ -52,7 +54,10 @@ export default function HalamanPembayaran() {
 
   const handleUploadBukti = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileBukti) return alert('Pilih foto bukti transfer terlebih dahulu!');
+    if (!fileBukti) {
+      showToast('Pilih foto bukti transfer terlebih dahulu!', 'error');
+      return;
+    }
 
     setIsUploading(true);
     try {
@@ -82,7 +87,7 @@ export default function HalamanPembayaran() {
       setIsSuccess(true);
       
     } catch (error: any) {
-      alert(`Gagal mengupload bukti pembayaran: ${error.message}`);
+      showToast(`Gagal mengupload bukti pembayaran: ${error.message}`, "error");
       console.error(error);
     } finally {
       setIsUploading(false);
