@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
+import { useToast } from '@/components/ToastProvider';
 
 interface Produk {
   id: string;
@@ -26,6 +27,7 @@ interface Varian {
 }
 
 export default function KatalogPage() {
+  const { showToast } = useToast();
   const [produkList, setProdukList] = useState<Produk[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [kategoriAktif, setKategoriAktif] = useState('ALL PRODUCT');
@@ -149,7 +151,7 @@ export default function KatalogPage() {
   const konfirmasiKeranjang = () => {
     if (!selectedProduct) return;
     if (varianList.length > 0 && !selectedVarian) {
-      alert('Silakan pilih varian produk terlebih dahulu.');
+      showToast('Silakan pilih varian produk terlebih dahulu.', 'error');
       return;
     }
 
@@ -173,7 +175,7 @@ export default function KatalogPage() {
     }
     
     localStorage.setItem('keranjang_umkm', JSON.stringify(keranjang));
-    alert(`${selectedProduct.nama_produk} berhasil ditambahkan ke keranjang!`);
+    showToast(`${selectedProduct.nama_produk} berhasil ditambahkan ke keranjang!`, 'success');
     setIsModalOpen(false);
   };
 

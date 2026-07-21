@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Image from 'next/image';
+
+export const metadata: Metadata = {
+  title: "Sejarah",
+  description: "Perjalanan Budiman Handicraft dalam melestarikan budaya Sunda melalui karya tangan para seniman lokal sejak 2016.",
+};
 
 export default function HistoryPage() {
   return (
