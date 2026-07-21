@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Image from 'next/image';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: "Artisans",
+  description: "Kenali para seniman lokal Budiman Handicraft — tangan-tangan terampil di balik setiap karya kerajinan tradisional Sunda.",
+};
 
 export default function ArtisansPage() {
   return (
