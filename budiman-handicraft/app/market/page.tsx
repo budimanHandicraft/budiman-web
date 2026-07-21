@@ -32,6 +32,8 @@ export default function MarketPage() {
   const [selectedDestination, setSelectedDestination] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [shippingError, setShippingError] = useState('');
+  const [isLoadingOngkir, setIsLoadingOngkir] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState<{id: string, kuantitas: number | string, catatan: string} | null>(null);
@@ -40,6 +42,22 @@ export default function MarketPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const SHIPPING_ORIGIN = process.env.NEXT_PUBLIC_SHIPPING_ORIGIN || '45363';
+  // NOTE: Hardcoded karena Raja Ongkir free tier hanya support tingkat
+  // kabupaten, bukan kecamatan/desa. Lokasi toko aktual di Cileunyi
+  // tidak bisa digunakan di free tier, jadi pakai ID kabupaten.
+
+  const SHIPPING_DISTANCE_ADJUSTMENT = parseInt(
+    process.env.NEXT_PUBLIC_SHIPPING_DISTANCE_ADJUSTMENT || '5000', 10
+  );
+  // NOTE: Nilai ini ARBITRAR / ASAL-ASALAN. Ditambah karena origin
+  // yang dipakai adalah pusat kabupaten (lebih jauh dari lokasi toko
+  // aktual), jadi ditambah "secara asal" sebagai antisipasi jarak.
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
+  const totalBerat = cartItems.reduce((sum, item) => sum + ((item.berat_gram || 100) * item.kuantitas), 0);
+  const beratKirim = totalBerat < 1000 ? 1000 : totalBerat;
+  const grandTotal = subtotal + shippingCost;
 
   useEffect(() => {
     const savedCart = localStorage.getItem('keranjang_umkm');
@@ -84,34 +102,44 @@ export default function MarketPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-  if (!selectedDestination) {
     setShippingCost(0);
     setShippingOptions([]);
-    return;
-  }
-  const fetchCost = async () => {
-    try {
-      const res = await fetch(`/api/ongkir`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          origin: "5467",
-          destination: selectedDestination, 
-          weight: beratKirim.toString(), 
-          courier: "jne"
-        })
-      });
-      const data = await res.json();
-      if (data?.data && data.data.length > 0) {
-        const filteredOptions = data.data.filter((opt: any) => !opt.service.includes('JTR'));
-        setShippingOptions(filteredOptions);
+    setShippingError('');
+
+    if (!selectedDestination) return;
+
+    const fetchCost = async () => {
+      setIsLoadingOngkir(true);
+      try {
+        const res = await fetch(`/api/ongkir`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origin: "5467",
+            destination: selectedDestination,
+            weight: beratKirim.toString(),
+            courier: "jne"
+          })
+        });
+        const data = await res.json();
+        if (data?.error) {
+          setShippingError(data.error);
+          return;
+        }
+        if (data?.data?.length > 0) {
+          setShippingOptions(data.data);
+        } else {
+          setShippingError('Tidak ada layanan pengiriman untuk rute ini');
+        }
+      } catch (error) {
+        console.error("Gagal memuat ongkir", error);
+        setShippingError('Gagal memuat opsi pengiriman. Silakan coba lagi.');
+      } finally {
+        setIsLoadingOngkir(false);
       }
-    } catch (error) {
-      console.error("Gagal memuat ongkir", error);
-    }
-  };
-  fetchCost();
-}, [selectedDestination, cartItems]);
+    };
+    fetchCost();
+  }, [selectedDestination, beratKirim]);
 
   const hapusItem = (id: string) => {
     const konfirmasi = window.confirm("Apakah kamu yakin ingin menghapus produk ini dari keranjang?");
@@ -152,6 +180,10 @@ export default function MarketPage() {
 
     if (!email || !fullName || !phone || !address || !postcode || !selectedDestination) {
       return alert("Mohon lengkapi semua data pengiriman dan kontak terlebih dahulu!");
+    }
+
+    if (shippingOptions.length > 0 && shippingCost <= 0) {
+      return alert("Mohon pilih layanan pengiriman terlebih dahulu!");
     }
 
     setIsSubmitting(true);
@@ -207,10 +239,6 @@ export default function MarketPage() {
     }
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
-  const totalBerat = cartItems.reduce((sum, item) => sum + ((item.berat_gram || 100) * item.kuantitas), 0);
-  const beratKirim = totalBerat < 1000 ? 1000 : totalBerat;
-  const grandTotal = subtotal + shippingCost;
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
 
   return (
@@ -269,6 +297,19 @@ export default function MarketPage() {
                 </div>
               )}
 
+              {isLoadingOngkir && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="w-4 h-4 border-2 border-[#d97736] border-t-transparent rounded-full animate-spin"></div>
+                  <span>Menghitung ongkos kirim...</span>
+                </div>
+              )}
+
+              {shippingError && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-sm text-red-700 text-sm">
+                  {shippingError}
+                </div>
+              )}
+
               {shippingOptions.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-2 italic">Pilih Layanan Pengiriman</label>
@@ -277,11 +318,14 @@ export default function MarketPage() {
                     className="text-black w-full bg-[#f0f0f0] p-3 text-sm rounded-sm"
                   >
                     <option value="">-- Pilih layanan --</option>
-                    {shippingOptions.map((opt: any, i: number) => (
-                      <option key={i} value={opt.cost + 5000}>
-                        {opt.service} - Rp {(opt.cost + 5000).toLocaleString('id-ID')} ({opt.etd} hari)
-                      </option>
-                    ))}
+                    {shippingOptions.map((opt: any, i: number) => {
+                      const totalBiaya = opt.cost + SHIPPING_DISTANCE_ADJUSTMENT;
+                      return (
+                        <option key={i} value={totalBiaya}>
+                          {opt.service} - Rp {totalBiaya.toLocaleString('id-ID')} ({opt.etd} hari)
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
