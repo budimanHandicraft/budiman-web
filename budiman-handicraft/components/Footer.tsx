@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#141414] text-white relative overflow-hidden">
+    <footer className="bg-[#010202] text-white relative overflow-hidden">
       {/* Atmospheric background */}
       <div className="absolute inset-0 bg-[url('/awan.svg')] bg-cover opacity-5 pointer-events-none" />
 

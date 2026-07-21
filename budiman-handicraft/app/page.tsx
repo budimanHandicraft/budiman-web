@@ -207,7 +207,7 @@ export default function Home() {
           <Image
             src="/awan.svg" alt="background awan"
             fill priority
-            className="object-cover scale-90 object-[center_16%]"
+            className="object-cover object-[0%_20%]"
           />
         </div>
         <div className="relative z-10 w-full mx-auto px-4 text-center">

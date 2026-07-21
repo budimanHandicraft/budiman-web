@@ -121,7 +121,7 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <div className="relative user-dropdown">
-                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#d77723]">
+                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#d77723] cursor-pointer">
                   <div className="w-7 h-7 bg-[#d77723] text-white rounded-full flex items-center justify-center text-xs font-bold">
                     {isAdmin ? 'Ad' : 'Me'}
                   </div>
