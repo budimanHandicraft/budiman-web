@@ -6,7 +6,7 @@ import { createBrowserClient } from '@supabase/ssr';
 const BULAN_LIST = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const tahunSekarang = new Date().getFullYear();
 const TAHUN_LIST = Array.from({ length: 7 }, (_, i) => (tahunSekarang - 2 + i).toString());
-const STATUS_LIST = ['Semua', 'menunggu_konfirmasi', 'dikemas', 'dikirim', 'retur', 'selesai'];
+const STATUS_LIST = ['Semua', 'belum_diproses', 'dikemas', 'dikirim', 'retur', 'selesai'];
 
 export default function HistoriTransaksi() {
   const supabase = createBrowserClient(
@@ -34,6 +34,9 @@ export default function HistoriTransaksi() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [resiInput, setResiInput] = useState('');
+  const [isSubmittingResi, setIsSubmittingResi] = useState(false);
   
   const formatRupiah = (angka: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -102,7 +105,7 @@ export default function HistoriTransaksi() {
           tanggal: new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
           produk: `${trx.produk_utama || 'Produk dihapus'}${tambahan}`,
           tagihan: formatRupiah((trx.total_belanja || 0) + (trx.ongkos_kirim || 0)),
-          status: trx.status_pengiriman || 'menunggu_konfirmasi',
+          status: trx.status_pengiriman || 'belum_diproses',
           status_pembayaran: trx.status_pembayaran
         };
       });
@@ -123,6 +126,7 @@ export default function HistoriTransaksi() {
     
     setSelectedOrder(order);
     setDetailItems(items || []);
+    setResiInput(order.nomor_resi || '');
     setIsDetailOpen(true);
   };
 
@@ -170,6 +174,31 @@ export default function HistoriTransaksi() {
       alert("Gagal menghapus transaksi. Periksa koneksi atau hak akses.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const simpanResi = async (orderId: string, currentStatus: string) => {
+    if (!resiInput.trim()) return;    
+    setIsSubmittingResi(true);
+    let payloadUpdate: any = { nomor_resi: resiInput };
+    if (currentStatus === 'dikemas') {
+      payloadUpdate.status_pengiriman = 'dikirim';
+    }
+
+    const { error } = await supabase
+      .from('transaksi')
+      .update(payloadUpdate)
+      .eq('order_id', orderId);
+      
+    setIsSubmittingResi(false);
+
+    if (!error) {
+      alert("Nomor resi berhasil disimpan!");
+      setIsDetailOpen(false);
+      window.location.reload();
+    } else {
+      alert("Gagal menyimpan nomor resi.");
+      console.error(error);
     }
   };
 
@@ -284,6 +313,7 @@ export default function HistoriTransaksi() {
                           }`}>
                             {order.status_pembayaran}
                           </span>
+                          {/* <span className={`px-2.5 py-1 text-[10px] uppercase font-bold rounded-sm ${badgeShip.bg} ${badgeShip.text}`}> */}
                           <span className="px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm bg-yellow-100 text-yellow-700">
                             {order.status}
                           </span>
@@ -355,11 +385,31 @@ export default function HistoriTransaksi() {
               ))}
             </div>
 
+            {selectedOrder.status_pembayaran === 'lunas' && (
+              <div className="mb-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+                <label className="block text-sm font-bold text-gray-900 mb-2">Nomor Resi Pengiriman</label>
+                <div className="flex gap-2">
+                  <input type="text" value={resiInput} onChange={(e) => setResiInput(e.target.value)} placeholder="nomor resi belum ada"
+                    className="flex-1 border border-gray-300 p-2 rounded-sm text-sm text-black outline-none focus:border-[#d97736]"
+                  />
+                  <button onClick={() => simpanResi(selectedOrder.order_id, selectedOrder.status_pengiriman)} disabled={!resiInput.trim() || isSubmittingResi}
+                    className="bg-[#d97736] hover:bg-[#c2662b] text-white px-4 py-2 rounded-sm text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    {selectedOrder.status_pengiriman === 'dikemas' ? 'Input Nomor Resi' : 'Edit Resi'}
+                  </button>
+                </div>
+
+                {selectedOrder.status_pengiriman === 'dikemas' && (
+                  <p className="text-[10px] text-gray-500 mt-2 italic">*Menginput resi akan otomatis mengubah status pesanan menjadi <b>DIKIRIM</b>.</p>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-4">
               {selectedOrder.status_pembayaran === 'menunggu_konfirmasi' && (
-                <button onClick={() => konfirmasiPesanan(selectedOrder.order_id)} className="bg-green-600 text-white px-6 py-2 rounded">Konfirmasi Lunas</button>
+                <button onClick={() => konfirmasiPesanan(selectedOrder.order_id)} className="border border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-6 py-2 rounded font-bold transition-colors cursor-pointer">Konfirmasi Lunas</button>
               )}
-              <button onClick={() => setIsDetailOpen(false)} className="border-1 border-red-400 bg-transparent hover:bg-red-400 px-6 py-2 rounded font-bold text-red-400 hover:text-white cursor-pointer">Tutup</button>
+              <button onClick={() => setIsDetailOpen(false)} className="border border-red-500 text-red-500 hover:bg-red-500 px-6 py-2 rounded font-bold hover:text-white transition-colors cursor-pointer">Tutup</button>
             </div>
           </div>
         </div>

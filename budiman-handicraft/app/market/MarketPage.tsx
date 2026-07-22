@@ -45,17 +45,10 @@ export default function MarketPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const SHIPPING_ORIGIN = process.env.NEXT_PUBLIC_SHIPPING_ORIGIN || '45363';
-  // NOTE: Hardcoded karena Raja Ongkir free tier hanya support tingkat
-  // kabupaten, bukan kecamatan/desa. Lokasi toko aktual di Cileunyi
-  // tidak bisa digunakan di free tier, jadi pakai ID kabupaten.
-
   const SHIPPING_DISTANCE_ADJUSTMENT = parseInt(
     process.env.NEXT_PUBLIC_SHIPPING_DISTANCE_ADJUSTMENT || '5000', 10
   );
-  // NOTE: Nilai ini ARBITRAR / ASAL-ASALAN. Ditambah karena origin
-  // yang dipakai adalah pusat kabupaten (lebih jauh dari lokasi toko
-  // aktual), jadi ditambah "secara asal" sebagai antisipasi jarak.
+  
   const subtotal = cartItems.reduce((sum, item) => sum + (item.harga * item.kuantitas), 0);
   const totalBerat = cartItems.reduce((sum, item) => sum + ((item.berat_gram || 100) * item.kuantitas), 0);
   const beratKirim = totalBerat < 1000 ? 1000 : totalBerat;
@@ -429,7 +422,7 @@ export default function MarketPage() {
           </div>
 
           <button disabled={cartItems.length === 0 || !selectedDestination || isSubmitting} onClick={handleCheckout}
-            className="w-full bg-[#d9dbd0] hover:bg-white text-gray-900 font-bold py-4 px-6 rounded-sm flex items-center justify-center gap-3 uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#d9dbd0] hover:bg-white text-gray-900 font-bold py-4 px-6 rounded-sm flex items-center justify-center gap-3 uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isSubmitting ? (
               <span className="animate-pulse">Processing Order...</span>
