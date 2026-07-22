@@ -27,7 +27,6 @@ export default function MarketPage() {
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
   const [address, setAddress] = useState('');
-  const [postcode, setPostcode] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -36,6 +35,7 @@ export default function MarketPage() {
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [shippingError, setShippingError] = useState('');
   const [isLoadingOngkir, setIsLoadingOngkir] = useState(false);
+  const [shippingServiceName, setShippingServiceName] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState<{id: string, kuantitas: number | string, catatan: string} | null>(null);
@@ -173,12 +173,12 @@ export default function MarketPage() {
       return;
     }
 
-    if (!email || !fullName || !phone || !address || !postcode || !selectedDestination) {
+    if (!email || !fullName || !phone || !address || !selectedDestination) {
       showToast("Mohon lengkapi semua data pengiriman dan kontak terlebih dahulu!", "error");
       return;
     }
 
-    if (shippingOptions.length > 0 && shippingCost <= 0) {
+    if (shippingOptions.length > 0 && (shippingCost <= 0 || !shippingServiceName)) {
       showToast("Mohon pilih layanan pengiriman terlebih dahulu!", "error");
       return;
     }
@@ -187,14 +187,18 @@ export default function MarketPage() {
     try {
       const orderIdCustom = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const pelangganId = session?.user?.id || null;
+      const selectedDestObj = destinations.find(d => d.id === selectedDestination);
+      const destinationLabel = selectedDestObj ? selectedDestObj.label : '';
+      const finalAddress = `${address}, ${destinationLabel}`;
       const payloadTransaksi = {
         order_id: orderIdCustom,
         nama_pembeli: fullName,
         kontak_pembeli: `${phone} | ${email}`,
-        alamat_lengkap: `${address} (Kodepos: ${postcode})`,
+        alamat_lengkap: finalAddress,
         kota_tujuan_id: selectedDestination,
         total_belanja: subtotal,
         ongkos_kirim: shippingCost,
+        layanan_pengiriman: shippingServiceName,
         status_pembayaran: 'menunggu_pembayaran',
         status_pengiriman: 'belum_diproses',
         pelanggan_id: pelangganId
@@ -271,10 +275,6 @@ export default function MarketPage() {
               <label className="block text-xs font-medium text-gray-600 mb-2 italic">Recipient Full Name</label>
               <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Udin" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2 italic">Street Address</label>
-              <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Building name, street, and unit number" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition resize-none"></textarea>
-            </div>
             
             <div className="grid grid-cols-1 gap-6">
               <div>
@@ -285,7 +285,7 @@ export default function MarketPage() {
               {destinations.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-2 italic">Pilih Alamat Spesifik</label>
-                  <select value={selectedDestination} onChange={(e) => setSelectedDestination(e.target.value)} className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none">
+                  <select value={selectedDestination} onChange={(e) => setSelectedDestination(e.target.value)} className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition appearance-none cursor-pointer">
                     <option value="">-- Pilih dari hasil pencarian --</option>
                     {destinations.map(dest => (
                       <option key={dest.id} value={dest.id}>{dest.label}</option>
@@ -311,41 +311,45 @@ export default function MarketPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-2 italic">Pilih Layanan Pengiriman</label>
                   <select 
-                    onChange={(e) => setShippingCost(parseFloat(e.target.value))} 
-                    className="text-black w-full bg-[#f0f0f0] p-3 text-sm rounded-sm"
+                    onChange={(e) => {
+                      if (!e.target.value) {
+                        setShippingCost(0);
+                        setShippingServiceName('');
+                        return;
+                      }
+                      const [costStr, serviceName] = e.target.value.split('|');
+                      setShippingCost(parseFloat(costStr));
+                      setShippingServiceName(serviceName);
+                    }} 
+                    className="text-black w-full bg-[#f0f0f0] p-3 text-sm rounded-sm cursor-pointer"
                   >
                     <option value="">-- Pilih layanan --</option>
                     {shippingOptions.map((opt: any, i: number) => {
                       const totalBiaya = opt.cost + SHIPPING_DISTANCE_ADJUSTMENT;
+                      const namaLayanan = `${opt.service} (${opt.etd} hari)`;
+                      
                       return (
-                        <option key={i} value={totalBiaya}>
+                        <option key={i} value={`${totalBiaya}|${namaLayanan}`}>
                           {opt.service} - Rp {totalBiaya.toLocaleString('id-ID')} ({opt.etd} hari)
                         </option>
                       );
                     })}
                   </select>
+                  <p className="text-[10px] md:text-[12px] text-gray-600 text-justify italic">Note : Layanan pengiriman saat ini hanya dapat melalui JNE</p>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Postcode (Kodepos)</label>
-                <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="40123" className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition" />
+                <label className="block text-xs font-medium text-gray-600 mb-2 italic">Street Address</label>
+                <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Nama jalan, patokan, desa/kelurahan, RT/RW, dan kode pos..." className="text-black w-full bg-[#f0f0f0] p-3 text-sm outline-none rounded-sm border border-transparent focus:border-gray-300 transition resize-none"></textarea>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-12">
-          <h2 className="text-lg font-serif font-bold text-gray-900 flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-            Payment Method
-          </h2>
-          <p className="text-xs text-gray-500 mt-2 ml-8">Pembayaran akan diproses dengan aman setelah Anda menekan tombol di bawah.</p>
-        </div>
-
         <div className="bg-[#f0f0f0] p-6 rounded-sm">
-          <h3 className="font-bold text-gray-900 mb-2 italic">The Budiman Promise</h3>
-          <p className="text-xs text-gray-600 leading-relaxed text-justify">
+          <h3 className="text-[14px] md:text-[16px] font-bold text-gray-900 mb-2 italic">The Budiman Promise</h3>
+          <p className="text-[12px] md:text-[14px] text-gray-600 text-justify">
             Every piece is meticulously handcrafted by master artisans in West Java. We guarantee 100% cultural authenticity and support for local artisan communities with every purchase.
           </p>
         </div>

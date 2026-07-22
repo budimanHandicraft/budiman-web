@@ -39,7 +39,7 @@ export default function AdminProduk() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [nama, setNama] = useState('');
-  const [kategori, setKategori] = useState('Umum');
+  const [kategori, setKategori] = useState('Wayang');
   const [deskripsi, setDeskripsi] = useState('');
   const [harga, setHarga] = useState('');
   const [berat, setBerat] = useState('1000');
@@ -100,7 +100,7 @@ export default function AdminProduk() {
       const urlGambarGabungan = await uploadMultipleImages(fileGambar);
       const payloadData = {
         nama_produk: nama,
-        kategori: kategori || 'Umum',
+        kategori: kategori || 'Wayang',
         deskripsi: deskripsi,
         harga: parseInt(harga),
         berat_gram: parseInt(berat),
@@ -115,7 +115,7 @@ export default function AdminProduk() {
       if (dbError) throw dbError;
       alert('Produk berhasil ditambahkan!');
       
-      setNama(''); setKategori('Umum'); setDeskripsi(''); setHarga(''); setBerat('1000'); setStok(''); setFileGambar(null);
+      setNama(''); setKategori('Wayang'); setDeskripsi(''); setHarga(''); setBerat('1000'); setStok(''); setFileGambar(null);
       fetchProduk();
       setActiveTab('daftar');
     } catch (error: any) {
@@ -262,12 +262,12 @@ export default function AdminProduk() {
         <h1 className="text-4xl font-serif font-bold text-black tracking-wide mb-4">Kelola Produk</h1>
         <div className="flex space-x-2 mb-4 border-b-2 border-[#df9e3d]">
           <button onClick={() => setActiveTab('daftar')} 
-            className={`px-6 py-2.5 rounded-t-sm font-bold text-sm tracking-widest uppercase transition-colors ${activeTab === 'daftar' ? 'bg-[#df9e3d] text-black shadow-md' : 'bg-transparent text-gray-500 hover:text-black hover:bg-[#fcebaf]'}`}
+            className={`px-6 py-2.5 rounded-t-sm font-bold text-sm tracking-widest uppercase transition-colors cursor-pointer ${activeTab === 'daftar' ? 'bg-[#df9e3d] text-black shadow-md' : 'bg-transparent text-gray-500 hover:text-black hover:bg-[#fcebaf]'}`}
           >
             Daftar Produk
           </button>
           <button onClick={() => setActiveTab('tambah')} 
-            className={`px-6 py-2.5 rounded-t-sm font-bold text-sm tracking-widest uppercase transition-colors ${activeTab === 'tambah' ? 'bg-[#df9e3d] text-black shadow-md' : 'bg-transparent text-gray-500 hover:text-black hover:bg-[#fcebaf]'}`}
+            className={`px-6 py-2.5 rounded-t-sm font-bold text-sm tracking-widest uppercase transition-colors cursor-pointer ${activeTab === 'tambah' ? 'bg-[#df9e3d] text-black shadow-md' : 'bg-transparent text-gray-500 hover:text-black hover:bg-[#fcebaf]'}`}
           >
             + Tambah Produk Baru
           </button>
