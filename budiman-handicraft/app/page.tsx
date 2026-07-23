@@ -64,14 +64,16 @@ export default function Home() {
 
         <div className="relative z-20 w-full pl-16">
           <div className="flex items-center gap-4">
-            <div className="w-28 h-0.5 bg-[#d77723]"></div>
-            <h1 className="text-[48px] text-[#df9e3d] font-bold">Legacy since 2016</h1>
+            {/* <div className="w-28 h-0.5 bg-[#d77723]"></div> */}
+            <h1 className="leading-none text-[64px] text-[#df9e3d] font-bold">ᮘᮥᮓᮤᮙᮔ᮪ ᮠᮔ᮪ᮓᮤᮎᮢᮖ᮪ᮒ᮪</h1>
           </div>
 
-          <p className="my-4 max-w-md text-[28px] text-white font-bold">Melestarikan Budaya Sunda <span className="text-[#df9e3d]">Melalui</span> <span className="italic">Karya Tangan</span></p>
-          <p className="max-w-xl text-white text-[16px]">Dari tangan para seniman, koleksi kami dirancang untuk mereka yang menghargai perjalanan di balik setiap guratan pahat. Temukan wayang serta kerajinan tradisional yang melampaui sekadar dekorasi, menjadi warisan yang abadi.</p>
+          {/* <p className="my-4 max-w-md text-[28px] text-white font-bold">Melestarikan Budaya Sunda <span className="text-[#df9e3d]">Melalui</span> <span className="italic">Karya Tangan</span></p> */}
+          <p className="mt-4 text-[40px] text-white font-bold">Ngamumule Budaya Sunda</p>
+          <p className="mb-4 max-w-md text-white text-[16px]">Preserving tradition through handrcafted art inspired by cultural heritage</p>
+          {/* <p className="max-w-xl text-white text-[16px]">Dari tangan para seniman, koleksi kami dirancang untuk mereka yang menghargai perjalanan di balik setiap guratan pahat. Temukan wayang serta kerajinan tradisional yang melampaui sekadar dekorasi, menjadi warisan yang abadi.</p> */}
 
-          <Link href="/katalog" className="inline-block relative mt-8 px-6 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold cursor-pointer">Explore Collections</Link>
+          <Link href="/katalog" className="inline-block relative px-4 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold cursor-pointer">Explore Collections</Link>
         </div>
 
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[2px] pointer-events-none">
@@ -115,7 +117,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-[24px] font-bold text-black mb-3">Longevity</h3>
-              <p className="text-black text-[16px] leading-relaxed text-justify">Dibuat menggunakan bahan baku kayu dan material berkualitas tinggi agar produk tetap kokoh, awet, dan tidak mudah rusak dimakan waktu.</p>
+              <p className="text-black text-[16px] leading-relaxed text-justify">Dibuat menggunakan bahan baku alam dan material berkualitas tinggi agar produk tetap kokoh, awet, dan tidak mudah rusak dimakan waktu.</p>
             </div>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default function Home() {
               <h2 className="text-[52px] font-bold text-black">Dedikasi di Balik Guratan</h2>
               <div className="space-y-6 text-black text-[24px] leading-tight mb-10 text-justify">
                 <p>Dimulai pada tahun 2016, Budiman Handicraft lahir dari keinginan sederhana untuk menjaga keterampilan kerajinan tangan lokal tetap eksis. Kami bekerja sama dengan seniman dan pengrajin lokal berpengalaman untuk menciptakan karya yang bisa dibanggakan.</p>
-                <p>Setiap produk yang kami hasilkan menggabungkan teknik pertukangan tradisional dengan standar kualitas masa kini. Mulai dari pemilihan kayu hingga tahap penyelesaian, kami memastikan setiap pesanan layak untuk menjadi koleksi pribadi Anda.</p>
+                <p>Setiap produk yang kami hasilkan menggabungkan teknik pertukangan tradisional dengan standar kualitas masa kini. Mulai dari pemilihan bahan hingga tahap penyelesaian, kami memastikan setiap pesanan layak untuk menjadi koleksi pribadi Anda.</p>
               </div>
               <hr className="border-gray-400 mb-8"></hr>
               <div className="flex justify-center gap-32 mb-8 text-center lg:text-left">
