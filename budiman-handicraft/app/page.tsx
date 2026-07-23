@@ -10,6 +10,9 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  const [latestProducts, setLatestProducts] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   
   const router = useRouter();
   const supabase = createBrowserClient(
@@ -40,6 +43,25 @@ export default function Home() {
     cekStatusLogin();
   }, [supabase]);
 
+  useEffect(() => {
+    const fetchLatestProducts = async () => {
+      setIsLoadingProducts(true);
+      const { data, error } = await supabase
+        .from('produk')
+        .select('id, nama_produk, harga, gambar_url')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (!error && data) {
+        setLatestProducts(data);
+      }
+      setIsLoadingProducts(false);
+    };
+
+    fetchLatestProducts();
+  }, [supabase]);
+
   const handleLogout = async () => {
     const konfirmasi = confirm('Apakah Anda yakin ingin keluar?');
     if (!konfirmasi) return;
@@ -64,14 +86,10 @@ export default function Home() {
 
         <div className="relative z-20 w-full pl-16">
           <div className="flex items-center gap-4">
-            {/* <div className="w-28 h-0.5 bg-[#d77723]"></div> */}
             <h1 className="leading-none text-[64px] text-[#df9e3d] font-bold">ᮘᮥᮓᮤᮙᮔ᮪ ᮠᮔ᮪ᮓᮤᮎᮢᮖ᮪ᮒ᮪</h1>
           </div>
-
-          {/* <p className="my-4 max-w-md text-[28px] text-white font-bold">Melestarikan Budaya Sunda <span className="text-[#df9e3d]">Melalui</span> <span className="italic">Karya Tangan</span></p> */}
           <p className="mt-4 text-[40px] text-white font-bold">Ngamumule Budaya Sunda</p>
           <p className="mb-4 max-w-md text-white text-[16px]">Preserving tradition through handrcafted art inspired by cultural heritage</p>
-          {/* <p className="max-w-xl text-white text-[16px]">Dari tangan para seniman, koleksi kami dirancang untuk mereka yang menghargai perjalanan di balik setiap guratan pahat. Temukan wayang serta kerajinan tradisional yang melampaui sekadar dekorasi, menjadi warisan yang abadi.</p> */}
 
           <Link href="/katalog" className="inline-block relative px-4 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold cursor-pointer">Explore Collections</Link>
         </div>
@@ -138,29 +156,38 @@ export default function Home() {
             <p className="text-white text-[18px] max-w-3xl">Koleksi yang menjadi standar kualitas pilihan pelanggan kami. Inilah karya-karya maestro yang memiliki kedudukan tersendiri dalam ruang, mencerminkan apresiasi tinggi terhadap tradisi yang tidak lekang oleh waktu</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-32 px-24">
-            <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
-              </div>
-              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
-              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
+          {/* GANTI BAGIAN GRID DUMMY DENGAN KODE INI */}
+          {isLoadingProducts ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-[#df9e3d] font-bold text-xl animate-pulse">Memuat koleksi terbaru...</span>
             </div>
-            <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
-              </div>
-              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Busur Panah</h3>
-              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
+          ) : latestProducts.length === 0 ? (
+            <div className="flex justify-center items-center py-20 text-gray-500">
+              Belum ada koleksi produk.
             </div>
-            <div className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-gray-200 mb-4 overflow-hidden rounded-sm relative">
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">Gambar Produk</div>
-              </div>
-              <h3 className="text-[32px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors">Wayang Golek</h3>
-              <p className="text-[#df9e3d] font-bold text-[24px]">Rp. 300.000,00</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-32 px-24">
+              {latestProducts.map((produk) => (
+                <Link href={`/katalog/${produk.id}`} key={produk.id} className="group cursor-pointer block">
+                  <div className="aspect-square bg-[#e3e8de] mb-4 overflow-hidden rounded-sm relative">
+                    {produk.gambar_url && produk.gambar_url.length > 0 ? (
+                      <Image 
+                        src={produk.gambar_url[0]} 
+                        alt={produk.nama_produk} 
+                        fill 
+                        className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No Image</div>
+                    )}
+                  </div>
+                  <h3 className="text-[28px] font-bold text-white mb-1 group-hover:text-[#d97736] transition-colors line-clamp-2">
+                    {produk.nama_produk}
+                  </h3>
+                </Link>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
