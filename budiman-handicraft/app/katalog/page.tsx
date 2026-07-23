@@ -14,6 +14,7 @@ interface Produk {
   deskripsi: string;
   kategori: string;
   gambar_url: string[];
+  berat_gram: number;
 }
 
 interface Varian {
@@ -24,6 +25,7 @@ interface Varian {
   nilai_varian_2: string | null;
   harga: number | null;
   stok: number | null;
+  berat_gram: number | null;
 }
 
 export default function KatalogPage() {
@@ -157,20 +159,23 @@ export default function KatalogPage() {
 
     const keranjangLama = localStorage.getItem('keranjang_umkm');
     let keranjang = keranjangLama ? JSON.parse(keranjangLama) : [];
-    
-    const cartItemId = selectedVarian ? selectedVarian.id : selectedProduct.id;
-    const indexProduk = keranjang.findIndex((item: any) => item.id === cartItemId);
+    const currentVarianId = selectedVarian ? selectedVarian.id : null;
+    const indexProduk = keranjang.findIndex((item: any) => 
+      item.id === selectedProduct.id && item.varian_id === currentVarianId
+    );
     
     if (indexProduk > -1) {
       keranjang[indexProduk].kuantitas += kuantitas;
     } else {
       keranjang.push({
-        id: cartItemId, 
+        id: selectedProduct.id,
+        varian_id: currentVarianId,
+        nama_varian: selectedVarian ? `${selectedVarian.nilai_varian_1 || ''} ${selectedVarian.nilai_varian_2 || ''}`.trim() : null,
         nama_produk: selectedProduct.nama_produk,
-        varian_nama: selectedVarian ? `${selectedVarian.nilai_varian_1 || ''} ${selectedVarian.nilai_varian_2 || ''}`.trim() : null,
         harga: hargaTampil,
         gambar_url: selectedProduct.gambar_url,
-        kuantitas: kuantitas
+        kuantitas: kuantitas,
+        berat_gram: selectedVarian?.berat_gram ?? selectedProduct.berat_gram
       });
     }
     
