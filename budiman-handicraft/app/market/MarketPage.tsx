@@ -8,6 +8,8 @@ import { useToast } from '@/components/ToastProvider';
 
 interface CartItem {
   id: string;
+  varian_id?: string;
+  nama_varian?: string;
   nama_produk: string;
   harga: number;
   gambar_url: string[];
@@ -214,6 +216,7 @@ export default function MarketPage() {
       const payloadDetail = cartItems.map(item => ({
         transaksi_id: transaksiData.id,
         produk_id: item.id,
+        varian_id: item.varian_id || null,
         kuantitas: item.kuantitas,
         harga_satuan: item.harga
       }));
@@ -375,7 +378,8 @@ export default function MarketPage() {
                   </div>
                   
                   <div className="flex-1">
-                    <h3 className="text-[#d97736] font-bold text-sm mb-1">{item.nama_produk}</h3>
+                    <h3 className="text-[#d97736] font-bold text-sm mb-1">{item.nama_produk} {item.nama_varian && <span className="text-gray-400 font-normal ml-1">({item.nama_varian})</span>}
+                    </h3>
                     <p className="text-white text-xs mb-1">Quantity: {item.kuantitas}</p>
                     {item.catatan && (
                       <p className="text-gray-400 text-[11px] italic line-clamp-2">Catatan: "{item.catatan}"</p>
