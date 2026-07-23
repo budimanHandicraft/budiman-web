@@ -329,7 +329,7 @@ export default function MarketPage() {
                     <option value="">-- Pilih layanan --</option>
                     {shippingOptions.map((opt: any, i: number) => {
                       const totalBiaya = opt.cost + SHIPPING_DISTANCE_ADJUSTMENT;
-                      const namaLayanan = `${opt.service} (${opt.etd} hari)`;
+                      const namaLayanan = `${opt.service} (${opt.etd})`;
                       
                       return (
                         <option key={i} value={`${totalBiaya}|${namaLayanan}`}>
