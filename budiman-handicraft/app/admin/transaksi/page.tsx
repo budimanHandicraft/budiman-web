@@ -122,7 +122,7 @@ export default function HistoriTransaksi() {
 
   const bukaDetail = async (orderId: string) => {
     const { data: order } = await supabase.from('transaksi').select('*').eq('order_id', orderId).single();
-    const { data: items } = await supabase.from('detail_transaksi').select('*, produk(* )').eq('transaksi_id', order.id);
+    const { data: items } = await supabase.from('detail_transaksi').select('*, produk(*), produk_varian(*)').eq('transaksi_id', order.id);
     
     setSelectedOrder(order);
     setDetailItems(items || []);
@@ -368,6 +368,19 @@ export default function HistoriTransaksi() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white p-8 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-black">Detail Pesanan: {selectedOrder.order_id}</h2>
+            <div className="mb-6 bg-gray-50 p-4 rounded-md border border-gray-200 text-black">
+              <div className="grid grid-cols-1 text-sm">
+                <p><span className="font-bold text-gray-500 uppercase text-[10px] tracking-wider block">Layanan Ekspedisi:</span> 
+                  <span className="font-bold text-[#d97736]">{selectedOrder.layanan_pengiriman || 'Belum ada data'}</span>
+                </p>
+                <p><span className="font-bold text-gray-500 uppercase text-[10px] tracking-wider block mt-2">Alamat Pengiriman:</span> 
+                  {selectedOrder.alamat_lengkap || 'Alamat tidak ditemukan'}
+                </p>
+                <p><span className="font-bold text-gray-500 uppercase text-[10px] tracking-wider block mt-2">Kontak Pembeli:</span> 
+                  {selectedOrder.kontak_pembeli}
+                </p>
+              </div>
+            </div>
   
             {selectedOrder.bukti_bayar_url && (
               <div className="mb-6 text-black">
@@ -376,13 +389,30 @@ export default function HistoriTransaksi() {
               </div>
             )}
 
-            <div className="mb-6 text-black">
-              {detailItems.map((item: any) => (
-                <div key={item.id} className="flex justify-between text-sm py-2 border-b">
-                  <span>{item.produk?.nama_produk || 'Produk'} x {item.kuantitas}</span>
-                  <span>{formatRupiah(item.harga_satuan * item.kuantitas)}</span>
-                </div>
-              ))}
+            <div className="mb-8 text-black">
+              <h3 className="font-bold text-sm mb-3 uppercase tracking-widest text-gray-500 border-b pb-2">Daftar Produk</h3>
+              {detailItems.map((item: any) => {
+                const namaVarian = item.produk_varian ? `${item.produk_varian.nilai_varian_1 || ''} ${item.produk_varian.nilai_varian_2 || ''}`.trim() : '';
+                return (
+                  <div key={item.id} className="flex justify-between items-start text-sm py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col pr-4">
+                      <span className="font-bold text-gray-900">{item.produk?.nama_produk || 'Produk Tidak Diketahui'} <span className="text-[#d97736]">x {item.kuantitas}</span></span>
+                      {namaVarian && (
+                        <span className="text-xs text-gray-600 mt-1 inline-block bg-gray-200 px-2 py-0.5 rounded-sm w-fit font-medium">
+                          Varian: {namaVarian}
+                        </span>
+                      )}
+                    
+                      {item.catatan && (
+                        <span className="text-[11px] text-gray-500 italic mt-1 bg-yellow-50 p-1 border-l-2 border-yellow-400">
+                          Note: "{item.catatan}"
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-bold text-gray-900 whitespace-nowrap">{formatRupiah(item.harga_satuan * item.kuantitas)}</span>
+                  </div>
+                );
+              })}
             </div>
 
             {selectedOrder.status_pembayaran === 'lunas' && (
