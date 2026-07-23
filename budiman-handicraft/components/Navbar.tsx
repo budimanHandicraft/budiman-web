@@ -141,6 +141,9 @@ export default function Navbar() {
                     <Link href="/pesanan" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm text-gray-700 hover:bg-[#faf9f5] hover:text-[#d77723] transition-colors">
                       Pesanan Saya
                     </Link>
+                    <Link href="/contact" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm text-gray-700 hover:bg-[#faf9f5] hover:text-[#d77723] transition-colors">
+                      Kontak Kami
+                    </Link>
 
                     <button onClick={handleLogout} className="text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-gray-50 mt-1 transition-colors cursor-pointer">
                       Keluar (Logout)
