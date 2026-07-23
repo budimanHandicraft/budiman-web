@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function NotFoundPage() {
   return (
-    <main className="min-h-screen bg-[#141414] flex items-center justify-center px-4 relative overflow-hidden font-sans">
+    <main className="min-h-screen bg-[#010202] flex items-center justify-center px-4 relative overflow-hidden font-sans">
       {/* Atmospheric background */}
       <div className="absolute inset-0 bg-[url('/awan.svg')] bg-cover opacity-10 pointer-events-none" />
       
@@ -53,7 +53,7 @@ export default function NotFoundPage() {
         {/* Decorative element */}
         <div className="mt-12 flex items-center justify-center gap-4">
           <div className="w-12 h-[1px] bg-[#df9e3d]" />
-          <span className="text-[#df9e3d] text-xs uppercase tracking-widest">Heritage Since 2016</span>
+          <span className="text-[#df9e3d] text-xs uppercase tracking-widest">Legacy Since 2016</span>
           <div className="w-12 h-[1px] bg-[#df9e3d]" />
         </div>
       </div>
