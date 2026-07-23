@@ -120,7 +120,7 @@ export default function HalamanPembayaran() {
     <main className="min-h-screen bg-[#faf9f5] pt-28 px-4 font-sans">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-serif font-bold text-gray-900 mb-8 text-center">Selesaikan Pembayaran</h1>
-        <div className="bg-white shadow-lg rounded-sm overflow-hidden mb-8 border border-gray-100">
+        <div className="bg-white shadow-lg rounded-sm overflow-hidden mb-6 border border-gray-100">
           <div className="bg-[#161616] p-6 text-white flex justify-between items-center flex-wrap gap-4">
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Order ID</p>
@@ -132,14 +132,13 @@ export default function HalamanPembayaran() {
             </div>
           </div>
 
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          <div className="p-8 grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-10 items-center">
             <div className="flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-200 pb-8 md:pb-0 md:pr-8">
               <h3 className="font-bold text-gray-900 mb-2">Scan QRIS</h3>
               <p className="text-xs text-gray-500 text-center mb-6">Buka aplikasi GoPay, DANA, OVO, atau m-Banking Anda, lalu scan kode QR di bawah ini.</p>
-              <div className="w-48 h-48 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-2 relative">
-                <Image src="/qris_payment.jpg" alt="QRIS Budiman Handicraft" fill className="object-contain p-2" />
+              <div className="w-64 h-64 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center relative">
+                <Image src="/qris.png" alt="QRIS Budiman Handicraft" fill className="object-cover rounded-lg" />
               </div>
-              <p className="text-[10px] text-gray-400 mt-4 italic">*Pastikan nama penerima adalah Budiman Handicraft</p>
             </div>
 
             <form onSubmit={handleUploadBukti} className="flex flex-col">
@@ -168,6 +167,7 @@ export default function HalamanPembayaran() {
                   'Kirim Bukti Pembayaran'
                 )}
               </button>
+              <p className="text-[10px] text-gray-400 mt-4 italic">*Pastikan nama penerima adalah Budiman Handicraft</p>
             </form>
           </div>
         </div>
