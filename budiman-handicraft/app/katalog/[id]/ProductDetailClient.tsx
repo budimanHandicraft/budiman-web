@@ -125,18 +125,18 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           {/* Gallery */}
-          <div className="lg:col-span-5 flex gap-4">
+          <div className="lg:col-span-7 flex gap-4">
             <div className="flex flex-col gap-4 w-20 shrink-0 max-h-[500px] overflow-y-auto no-scrollbar">
               {galeriAsli.map((img, idx) => (
                 <button key={idx} onClick={() => setGambarUtama(img)}
-                  className={`aspect-[3/4] relative rounded-sm overflow-hidden border-2 transition-all ${gambarUtama === img ? 'border-[#d97736]' : 'border-transparent hover:border-gray-300'}`}
+                  className={`aspect-[3/4] relative rounded-sm overflow-hidden border-2 cursor-pointer transition-all ${gambarUtama === img ? 'border-[#d97736]' : 'border-transparent hover:border-gray-300'}`}
                 >
                   <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
                 </button>
               ))}
             </div>
 
-            <div className="flex-1 aspect-[4/5] relative bg-[#e3e8de] rounded-sm overflow-hidden">
+            <div className="flex-1 aspect-square relative bg-[#e3e8de] rounded-sm overflow-hidden">
               {gambarUtama ? (
                 <Image src={gambarUtama} alt={produk.nama_produk} fill className="object-cover" />
               ) : (
@@ -145,20 +145,19 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
             </div>
           </div>
 
-          {/* Product Info */}
-          <div className="lg:col-span-3 flex flex-col justify-center">
+          <div className="lg:col-span-5 flex flex-col justify-center">
             <span className="text-[#df9e3d] font-bold text-xs tracking-[0.2em] uppercase mb-2">{produk.kategori || 'Handicraft'}</span>
             <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">{produk.nama_produk}</h1>
             <div className="flex items-center text-[#d97736] mb-4 text-sm gap-1">★★★★★ <span className="text-gray-400 text-xs ml-1">(Artisan Verified)</span></div>
 
             <p className="text-xl font-bold text-[#d77723] mb-1">Rp {hargaTampil.toLocaleString('id-ID')}</p>
-            <p className="text-xs text-gray-500 font-medium tracking-wide mb-6">
+            <p className="text-xs text-gray-500 font-medium tracking-wide mb-4">
               Sisa Stok: <span className={`font-bold ${stokTampil === 0 ? 'text-red-600' : 'text-gray-900'}`}>{stokTampil}</span>
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed text-justify mb-8">{produk.deskripsi}</p>
+            <p className="text-sm text-gray-700 text-justify mb-4 line-clamp-12">{produk.deskripsi}</p>
 
             {varianList.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 border-b border-gray-100 pb-2">Pilih Varian</p>
                 <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1 pb-2">
                   {varianList.map((varian) => (
@@ -178,7 +177,7 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-8 border-t border-gray-100 pt-6">
+            <div className="flex items-center justify-between mb-4 border-t border-gray-100 pt-4">
               <span className="text-xs font-bold text-gray-900 uppercase tracking-widest">Kuantitas</span>
               <div className="flex items-center border border-gray-300 rounded-sm overflow-hidden">
                 <button
@@ -201,7 +200,7 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 mb-8">
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => tambahKeKeranjang(false)}
                 disabled={stokTampil === 0 || (varianList.length > 0 && !selectedVarian)}
@@ -218,49 +217,11 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
                 {stokTampil === 0 ? 'Stok Habis' : 'Beli Sekarang'}
               </button>
             </div>
-
-            <div className="flex justify-between items-center text-center border-t border-gray-100 pt-6">
-              <div className="flex flex-col items-center gap-2 text-gray-500">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" /></svg>
-                <span className="text-[10px] uppercase font-bold">Craftmanship</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-gray-500">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.82 1.508-2.316a7.5 7.5 0 10-7.516 0c.85.496 1.508 1.333 1.508 2.316V18" /></svg>
-                <span className="text-[10px] uppercase font-bold">Philosophy</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-gray-500">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="text-[10px] uppercase font-bold">Longevity</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Story Panel */}
-          <div className="lg:col-span-4 flex items-start">
-            <div className="border border-gray-200 p-6 rounded-sm w-full bg-[#faf9f5]">
-              <h3 className="font-serif font-bold text-lg text-black mb-4">Cerita di Balik Karya Ini</h3>
-              <div className="flex gap-4 mb-4">
-                <div className="w-24 h-24 bg-[#e3e8de] rounded-sm shrink-0 relative overflow-hidden">
-                   {produk.gambar_url?.[0] && (
-                     <Image src={produk.gambar_url[0]} alt="Story" fill className="object-cover" />
-                   )}
-                </div>
-                <p className="text-xs text-gray-600 leading-relaxed text-justify">
-                  Setiap produk Budiman Handicraft lahir dari tangan para seniman lokal Sunda. 
-                  Teknik pewarisan turun-temurun digabung dengan standar kualitas modern, 
-                  menjadikan setiap karya bukan sekadar hiasan, melainkan warisan hidup yang membawa nilai filosofi budaya.
-                </p>
-              </div>
-              <Link href="/history" className="text-[#d77723] font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1 transition-colors">
-                Jelajahi Cerita Kami <span>&rarr;</span>
-              </Link>
-            </div>
           </div>
         </div>
 
-        {/* Tabs + Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
-          <div className="lg:col-span-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
+          <div className="lg:col-span-4 flex flex-col gap-8">
             <div className="bg-[#faf9f5] border border-[#e8e6dd] p-6 rounded-sm">
               <h3 className="font-serif font-bold text-lg text-black mb-6">Detail Produk</h3>
               <div className="grid grid-cols-2 gap-y-4 text-xs">
@@ -280,6 +241,20 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
 
                 <span className="text-gray-500">Garansi</span>
                 <span className="font-medium text-gray-900">100% Handmade</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 flex items-start">
+              <div className="border border-gray-200 p-6 rounded-sm w-full bg-[#faf9f5]">
+                <h3 className="font-serif font-bold text-lg text-black mb-4">Cerita di Balik Karya</h3>
+                <p className="text-xs text-gray-600 leading-relaxed text-justify mb-4">
+                  Setiap produk Budiman Handicraft lahir dari tangan para seniman lokal Sunda. 
+                  Teknik pewarisan turun-temurun digabung dengan standar kualitas modern, 
+                  menjadikan setiap karya bukan sekadar hiasan, melainkan warisan hidup yang membawa nilai filosofi budaya.
+                </p>
+                <Link href="/history" className="text-[#d77723] font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1 transition-colors">
+                  Jelajahi Cerita Kami <span>&rarr;</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -335,7 +310,6 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
         </div>
       </div>
 
-      {/* Related Products */}
       <div className="bg-[#141414] py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/awan.svg')] bg-[20%_0%] bg-cover bg-center pointer-events-none opacity-70" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -355,7 +329,7 @@ export default function ProductDetailClient({ produk, produkLain, varianList }: 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {produkLain.map((item) => (
                 <Link href={`/katalog/${item.id}`} key={item.id} className="group">
-                  <div className="aspect-[4/3] bg-[#e3e8de] rounded-sm mb-4 relative overflow-hidden">
+                  <div className="aspect-square bg-[#e3e8de] rounded-sm mb-4 relative overflow-hidden">
                     {item.gambar_url?.[0] ? (
                       <Image src={item.gambar_url[0]} alt={item.nama_produk} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
