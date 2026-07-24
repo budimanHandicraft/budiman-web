@@ -149,14 +149,13 @@ export default function Home() {
             className="object-cover object-[center_10%]"
           />
         </div>
-        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-24">
+        <div className="relative z-10 w-full mx-auto px-8 md:px-12 lg:px-20">
           <div className="mb-8">
             <h4 className="text-[#df9e3d] font-bold text-[24px] tracking-[0.23m] uppercase mb-2">Curated Selection</h4>
             <h2 className="text-[28px] font-bold text-white mb-4 leading-none">The Artisan Masterpiece</h2>
             <p className="text-white text-[18px] max-w-3xl">Koleksi yang menjadi standar kualitas pilihan pelanggan kami. Inilah karya-karya maestro yang memiliki kedudukan tersendiri dalam ruang, mencerminkan apresiasi tinggi terhadap tradisi yang tidak lekang oleh waktu</p>
           </div>
 
-          {/* GANTI BAGIAN GRID DUMMY DENGAN KODE INI */}
           {isLoadingProducts ? (
             <div className="flex justify-center items-center py-20">
               <span className="text-[#df9e3d] font-bold text-xl animate-pulse">Memuat koleksi terbaru...</span>
@@ -166,9 +165,9 @@ export default function Home() {
               Belum ada koleksi produk.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-32 px-24">
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 lg:gap-32">
               {latestProducts.map((produk) => (
-                <Link href={`/katalog/${produk.id}`} key={produk.id} className="group cursor-pointer block">
+                <Link href={`/katalog/${produk.id}`} key={produk.id} className="group cursor-pointer block p-12 md:p-0">
                   <div className="aspect-square bg-[#e3e8de] mb-4 overflow-hidden rounded-sm relative">
                     {produk.gambar_url && produk.gambar_url.length > 0 ? (
                       <Image 
