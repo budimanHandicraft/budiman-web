@@ -74,7 +74,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="-mt-12 relative w-full h-[600px] md:h-[1000px] flex items-center overflow-hidden">
+      <section className="-mt-12 relative w-full h-[600px] md:h-[1000px] flex items-center">
         <div className="absolute inset-0 z-0 overflow-hidden bg-[#081318]">
           <Image
             src="/wayang.png" alt="background wayang"
@@ -94,7 +94,7 @@ export default function Home() {
           <Link href="/katalog" className="inline-block relative px-4 py-3 bg-[#d77723] hover:bg-[#c2662b] rounded-lg text-white font-semibold cursor-pointer">Explore Collections</Link>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[2px] pointer-events-none">
+        <div className="absolute -bottom-1 left-0 w-full leading-none z-10 pointer-events-none">
           <svg className="relative block w-full h-[80px] md:h-[400px] transform -scale-x-100" xmlns="http://www.w3.org/2000/svg"
                viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path
@@ -105,7 +105,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="pb-20 bg-white">
+      <section className="pt-8 pb-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
