@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function ContactPage() {
-  const waNumber = "6281234567890";
+  const waNumber = "6282246877727";
   const waMessage = encodeURIComponent("Halo Budiman Handicraft, saya tertarik dengan produk seni kriya Anda dan ingin bertanya lebih lanjut.");
   const igUsername = "budiman_handicraft";
   const gmapsLink = "https://maps.app.goo.gl/zGEyjdaXuKJnSfkP6";
