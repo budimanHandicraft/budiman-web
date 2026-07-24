@@ -21,9 +21,9 @@ interface Varian {
   nilai_varian_2: string | null;
   harga: number | null;
   stok: number | null;
+  berat_gram: number | null;
 }
 
-// Server-side Supabase client (no auth needed for public reads)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -75,8 +75,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function DetailProdukPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const idProduk = resolvedParams.id;
-
-  // Fetch product server-side
   const { data: produkData } = await supabase
     .from("produk")
     .select("*")
@@ -84,21 +82,16 @@ export default async function DetailProdukPage({ params }: { params: Promise<{ i
     .single();
 
   if (!produkData) {
-    // This will be caught by not-found.tsx
     return null;
   }
 
   const produk = produkData as Produk;
-
-  // Fetch variants
   const { data: varianData } = await supabase
     .from("produk_varian")
     .select("*")
     .eq("produk_id", idProduk);
 
   const varianList = (varianData || []) as Varian[];
-
-  // Fetch related products
   const { data: rekomendasi } = await supabase
     .from("produk")
     .select("*")
